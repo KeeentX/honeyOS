@@ -56,10 +56,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
-        "resizable": true,
+        "height": 540,
+        "resizable": false,
         "title": "HoneyOS",
-        "width": 800
+        "width": 960
       }
     ]
   }
