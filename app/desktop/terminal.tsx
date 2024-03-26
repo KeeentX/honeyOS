@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useDirectory } from "../directoryContext";
 import { invoke } from '@tauri-apps/api/tauri';
 import { app } from "@tauri-apps/api";
+import { readDir } from '@tauri-apps/api/fs';
 
 
 export default function Terminal() {
@@ -12,14 +13,14 @@ export default function Terminal() {
     const [oldText, setOldText] = useState("");
     const hasRunOnceRef = useRef(false);
 
-async function appendSystemInfoToTerminal() {
-    try {
-        const systemInfo = await invoke('get_system_info');
-        const { cpu_name, cpu_speed, ram, disk } = JSON.parse(systemInfo);
-        const diskInGB = (disk / (1024 * 1024)).toFixed(2);
-        const ramInGB = (ram / (1024 * 1024 * 1024)).toFixed(2);
+    async function appendSystemInfoToTerminal() {
+        try {
+            const systemInfo = await invoke('get_system_info') as string;
+            const { cpu_name, cpu_speed, ram, disk } = JSON.parse(systemInfo);
+            const diskInGB = (disk / (1024 * 1024)).toFixed(2);
+            const ramInGB = (ram / (1024 * 1024 * 1024)).toFixed(2);
 
-        let asciiArt = `
+            let asciiArt = `
                @@@@@                          JOI
             @@@/*...@@@/                      ------------------
    @@@@@@@@@@/........,@@                     OS: Honey x86_64
@@ -41,11 +42,11 @@ async function appendSystemInfoToTerminal() {
          /@@@@@@@@@@                                      
         `;
 
-        appendToTerminal(asciiArt);
-    } catch (error) {
-        console.error('Failed to fetch system info:', error);
+            appendToTerminal(asciiArt);
+        } catch (error) {
+            console.error('Failed to fetch system info:', error);
+        }
     }
-}
 
     useEffect(() => {
         if (!hasRunOnceRef.current) {
@@ -63,6 +64,23 @@ async function appendSystemInfoToTerminal() {
             }
         };
     }, []);
+
+    async function listCurrentDirectory() {
+        try {
+            const files = await invoke('list_directory_with_times', { path: directory });
+            const fileDetails = files.map(file => {
+                const date = new Date(file.mtime * 1000).toLocaleDateString();
+                const time = new Date(file.mtime * 1000).toLocaleTimeString();
+                const size = (file.size / 1024).toFixed(2); // Convert size to KB and round to 2 decimal places
+                return `${date} ${time}    ${size} KB    ${file.name}`;
+            }).join("\n");
+            appendToTerminal(fileDetails);
+        } catch (error) {
+            appendToTerminal(`Error listing directory: ${error}`);
+            console.log(error);
+        }
+    }
+      
 
     const focusInput = () => {
         if (inputRef.current) {
@@ -114,8 +132,12 @@ async function appendSystemInfoToTerminal() {
                 }
                 break;
             case "":
-                if(commandParts.length > 1) {
-
+                break;
+            case "list":
+                if(commandParts.length > 1){
+                    appendToTerminal("list: too many arguments");
+                }else{
+                    listCurrentDirectory();
                 }
 
                 break;
@@ -137,7 +159,7 @@ async function appendSystemInfoToTerminal() {
         <div className="relative text-white ml-[5vw] mt-[5vh] w-[50vw] text-sm" ref={terminalRef}>
             <div className="absolute w-[45vw] h-[80vh] bg-black/40 blur-none backdrop-blur-sm top-0 -z-100"></div>
             <div className="relative blur-none relative z-20 p-[2vh] mr-[5vw] break-words outline-none select-none cursor-text h-[80vh] overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                <div className="text-green-400 whitespace-pre" dangerouslySetInnerHTML={{ __html: oldText.replace(/\n/g, '<br>') }}></div>
+                <div className="text-green-400 whitespace-pre overflow-wrap" dangerouslySetInnerHTML={{ __html: oldText.replace(/\n/g, '<br>') }}></div>
                 <div className="flex items-center w-[40vw]">
                     <span className="pointer-events-none">{modifiedDirectory}{'>'}</span>
                     <span

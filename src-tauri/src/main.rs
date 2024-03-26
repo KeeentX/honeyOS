@@ -64,6 +64,7 @@ use std::thread;
 use std::sync::mpsc;
 use tauri::Manager;
 use std::fs;
+use std::path::Path;
 extern crate sys_info;
 use sysinfo::{System, RefreshKind, CpuRefreshKind};
 
@@ -88,11 +89,46 @@ fn get_system_info() -> Result<String, String> {
     Ok(system_info.to_string())
 }
 
+#[derive(serde::Serialize)]
+struct FileEntry {
+    name: String,
+    mtime: u64,
+    size: u64,
+}
+
+#[tauri::command]
+fn list_directory_with_times(path: String) -> Result<Vec<FileEntry>, String> {
+    let entries = fs::read_dir(Path::new(&path))
+        .map_err(|e| e.to_string())?
+        .filter_map(|entry| {
+            let entry = entry.ok()?;
+            let metadata = entry.metadata().ok()?;
+            let mtime = metadata
+                .modified()
+                .ok()?
+                .duration_since(std::time::UNIX_EPOCH)
+                .ok()?
+                .as_secs();
+            let size = metadata.len();
+
+            Some(FileEntry {
+                name: entry.file_name().to_string_lossy().into_owned(),
+                mtime,
+                size,
+            })
+        })
+        .collect();
+
+    Ok(entries)
+}
 
 fn main() {
     let context = tauri::generate_context!();
     let _app = tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_system_info])
+        .invoke_handler(tauri::generate_handler![
+            get_system_info,
+            list_directory_with_times
+        ])
         .setup(|app| {
             let app_handle = app.handle();
             let (tx, rx) = mpsc::channel();
