@@ -27,7 +27,7 @@ is_currently_speaking = False
 silence_duration = 0  # Duration of silence in milliseconds
 
 # Create a directory for temporary audio files if it doesn't exist
-temp_audio_dir = "../../temp_audio"
+temp_audio_dir = "C://honey//audio//"
 os.makedirs(temp_audio_dir, exist_ok=True)
 
 while True:

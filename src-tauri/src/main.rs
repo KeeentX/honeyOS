@@ -63,13 +63,56 @@ use std::io::{BufRead, BufReader};
 use std::thread;
 use std::sync::mpsc;
 use tauri::Manager;
+use std::fs;
+extern crate sys_info;
+use sysinfo::{System, RefreshKind, CpuRefreshKind};
+
+#[tauri::command]
+fn get_system_info() -> Result<String, String> {
+    let mut system = System::new_with_specifics(RefreshKind::new().with_cpu(CpuRefreshKind::everything()));
+    system.refresh_all();
+
+    let cpu = system.cpus().get(0).ok_or("No CPU found")?;
+    let cpu_name = cpu.brand();
+    let cpu_speed = cpu.frequency();
+    let total_ram = system.total_memory(); // in KB
+    let disk_info = sys_info::disk_info().map_err(|e| e.to_string())?;
+
+    let system_info = serde_json::json!({
+        "cpu_name": cpu_name,
+        "cpu_speed": cpu_speed,
+        "ram": total_ram,
+        "disk": disk_info.total,
+    });
+
+    Ok(system_info.to_string())
+}
+
 
 fn main() {
     let context = tauri::generate_context!();
     let _app = tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![get_system_info])
         .setup(|app| {
             let app_handle = app.handle();
             let (tx, rx) = mpsc::channel();
+
+            let honey_path = "C:\\honey";  // Use double backslashes in Windows paths
+            if !fs::metadata(honey_path).is_ok() {
+                match fs::create_dir(honey_path) {
+                    Ok(_) => println!("'honey' directory created successfully at C:\\"),
+                    Err(e) => eprintln!("Failed to create 'honey' folder at C:\\: {}", e),
+                }
+            }
+
+            // Ensure that a folder named "root" is present inside "C:\\honey"
+            let root_path = format!("{}\\root", honey_path);
+            if !fs::metadata(&root_path).is_ok() {
+                match fs::create_dir(&root_path) {
+                    Ok(_) => println!("'root' directory created successfully inside 'honey'"),
+                    Err(e) => eprintln!("Failed to create 'root' folder inside 'honey': {}", e),
+                }
+            }
 
             // Spawn a thread to run the Python script
             thread::spawn(move || {

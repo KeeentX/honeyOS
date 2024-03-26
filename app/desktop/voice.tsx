@@ -42,7 +42,7 @@ export default function Voice() {
                             canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
                             canvasCtx.fillStyle = 'rgb(0, 0, 0, 0)';
                             canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-                            canvasCtx.lineWidth = 2;
+                            canvasCtx.lineWidth = 3;
                             canvasCtx.strokeStyle = 'rgb(255, 255, 255)';
                             canvasCtx.beginPath();
                             const sliceWidth = canvas.width * 1.0 / analyser.frequencyBinCount;
@@ -80,11 +80,11 @@ export default function Voice() {
             <div className="relative blur-none z-20 p-[2vh] mr-[5vw] break-words">
                 MICROPHONE: {microphoneName}
             </div>
-            <div className="relative blur-none z-20 pl-[2vh] mr-[5vw] break-words w-[40vw] overflow-auto max-h-[8vh] min-h-[8vh]">
+            <div className="relative blur-none z-20 pl-[2vh] mr-[5vw] break-words w-[40vw] overflow-auto max-h-[7vh] min-h-[7vh] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                 {transcript}
             </div>
             <div className="blur-none flex justify-center w-[40vw]">
-                <canvas ref={canvasRef} width="500" height="100"></canvas>
+                <canvas ref={canvasRef} width="600" height="100"></canvas>
             </div>
         </div>
     );
