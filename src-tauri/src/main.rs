@@ -94,6 +94,7 @@ struct FileEntry {
     name: String,
     mtime: u64,
     size: u64,
+    is_dir: bool
 }
 
 #[tauri::command]
@@ -110,11 +111,13 @@ fn list_directory_with_times(path: String) -> Result<Vec<FileEntry>, String> {
                 .ok()?
                 .as_secs();
             let size = metadata.len();
+            let is_directory = metadata.is_dir();
 
             Some(FileEntry {
                 name: entry.file_name().to_string_lossy().into_owned(),
                 mtime,
                 size,
+                is_dir: is_directory
             })
         })
         .collect();

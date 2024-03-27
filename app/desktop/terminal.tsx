@@ -4,15 +4,35 @@ import { invoke } from '@tauri-apps/api/tauri';
 import { app } from "@tauri-apps/api";
 import { readDir } from '@tauri-apps/api/fs';
 
-
 export default function Terminal() {
-    const { directory } = useDirectory();
-    const [modifiedDirectory, setModifiedDirectory] = useState(directory.replace("honey\\root", ""));
+    const { directory, setDirectory } = useDirectory();
+    const [modifiedDirectory, setModifiedDirectory] = useState(directory.replace("C:\\honey\\root", "C:\\"));
     const inputRef = useRef(null);
     const terminalRef = useRef(null);
     const [oldText, setOldText] = useState("");
     const hasRunOnceRef = useRef(false);
 
+    useEffect(() => {
+        if (terminalRef.current) {
+            (terminalRef.current as HTMLElement).removeEventListener("click", focusInput);
+        }
+
+        return () => {
+            if (terminalRef.current) {
+                (terminalRef.current as HTMLElement).removeEventListener("click", focusInput);
+            }
+        };
+    }, []);
+
+    /*------------------------------------------------------------------------------------------------------------*/
+    // TERMINAL FUNCTIONS
+    /*------------------------------------------------------------------------------------------------------------*/
+
+    
+    /*
+        FETCH
+        - Fetches the system information and appends it to the terminal
+    */
     async function appendSystemInfoToTerminal() {
         try {
             const systemInfo = await invoke('get_system_info') as string;
@@ -48,43 +68,82 @@ export default function Terminal() {
         }
     }
 
-    useEffect(() => {
-        if (!hasRunOnceRef.current) {
-            appendSystemInfoToTerminal();
-            hasRunOnceRef.current = true;
-        }
-        
-        if (terminalRef.current) {
-            terminalRef.current.addEventListener("click", focusInput);
-        }
-
-        return () => {
-            if (terminalRef.current) {
-                terminalRef.current.removeEventListener("click", focusInput);
-            }
-        };
-    }, []);
-
+    /*
+        LIST
+        - Lists the files in the current directory
+    */
     async function listCurrentDirectory() {
         try {
-            const files = await invoke('list_directory_with_times', { path: directory });
+            appendToTerminal(`Directory of ${modifiedDirectory}\n`);
+
+            const files: Array<{ name: string, mtime: number, size: number, is_dir: boolean }> = await invoke('list_directory_with_times', { path: directory });
             const fileDetails = files.map(file => {
                 const date = new Date(file.mtime * 1000).toLocaleDateString();
                 const time = new Date(file.mtime * 1000).toLocaleTimeString();
-                const size = (file.size / 1024).toFixed(2); // Convert size to KB and round to 2 decimal places
-                return `${date} ${time}    ${size} KB    ${file.name}`;
+                const size = file.is_dir ? 'DIR    ' : `${(file.size / 1024).toFixed(2)} KB`; // Check if it's a directory
+                console.log(file.is_dir);
+                return `${date} ${time}    ${size}    ${file.name}`;
             }).join("\n");
             appendToTerminal(fileDetails);
         } catch (error) {
             appendToTerminal(`Error listing directory: ${error}`);
             console.log(error);
         }
+    }   
+
+    /*
+        ENTER [directory]
+        - Enters a directory
+    */
+    async function enterDirectory(dir: string) {
+        try {
+            const newDirectory = `${directory}\\${dir}`;
+            const files: Array<{ name: string, mtime: number, size: number, is_dir: boolean }> = await invoke('list_directory_with_times', { path: directory });
+            for (let i = 0; i < files.length; i++) {
+                if (files[i].name === dir) {
+                    setModifiedDirectory(newDirectory.replace("C:\\honey\\root\\", "C:\\"));
+                    setDirectory(newDirectory);
+                    return;
+                }
+            }
+
+            appendToTerminal(`Directory '${dir}' not found`);
+        } catch (error) {
+            appendToTerminal(`Error entering directory: ${error}`);
+            console.log(error);
+        }
     }
-      
+
+    /*
+        EXIT
+        - Exits the current directory
+    */
+    async function exitDirectory() {
+        try {
+            // Check if the current directory is the root directory
+            if (directory === "C:\\honey\\root") {
+                return;
+            }
+
+            const newDirectory = directory.split("\\").slice(0, -1).join("\\");
+            setDirectory(newDirectory);
+            if(newDirectory === "C:\\honey\\root"){
+                setModifiedDirectory(newDirectory.replace("C:\\honey\\root", "C:\\"));
+            }else{
+                setModifiedDirectory(newDirectory.replace("C:\\honey\\root\\", "C:\\"));
+            }
+        } catch (error) {
+            appendToTerminal(`Error exiting directory: ${error}`);
+            console.log(error);
+        }
+    }
+    
+    
+    /*------------------------------------------------------------------------------------------------------------*/
 
     const focusInput = () => {
         if (inputRef.current) {
-            inputRef.current.focus();
+            (inputRef.current as HTMLSpanElement).focus();
             moveCursorToEnd();
         }
     };
@@ -106,9 +165,9 @@ export default function Terminal() {
         
             // Execute command, clear the input and append the user input to the terminal
             if (inputRef.current) {
-                const userInput: string = inputRef.current.innerText.trim();
+                const userInput: string = (inputRef.current as HTMLSpanElement).innerText.trim();
                 appendToTerminal(`${modifiedDirectory}${'>'}${userInput}`);
-                inputRef.current.innerText = ""; // Clear the input
+                (inputRef.current as HTMLSpanElement).innerText = ""; // Clear the input
                 moveCursorToEnd(); // Move the cursor to the end
                 executeCommand(userInput);
             }
@@ -118,9 +177,8 @@ export default function Terminal() {
     function appendToTerminal(text: string) {
         setOldText((prev: string) => prev === "" ? text : `${prev}\n${text}`);
     }
-    
 
-    function executeCommand(command: string) {
+    async function executeCommand(command: string) {
         const commandParts = command.split(" ");
 
         switch (commandParts[0]) {
@@ -141,6 +199,16 @@ export default function Terminal() {
                 }
 
                 break;
+            case "enter":
+                if(commandParts.length < 2){
+                    appendToTerminal("enter: too few arguments");
+                }else if (commandParts.length > 2){
+                    appendToTerminal("enter: too many arguments");
+                }else{
+                    enterDirectory(commandParts[1]);
+                }
+
+                break;
             case "fetch":
                 if(commandParts.length > 1) {
                     appendToTerminal("fetch: too many arguments");
@@ -149,8 +217,36 @@ export default function Terminal() {
                     appendSystemInfoToTerminal();
                 }
                 break;
+            case "exit":
+                if(commandParts.length > 1) {
+                    appendToTerminal("exit: too many arguments");
+                }else{
+                    exitDirectory();
+                }
+                break;
+            case "note":
+                // Create a modal
+                
+                
+                break;
             default:
-                appendToTerminal(`'${commandParts[0]}' is not recognized as an internal or external command, operable program or file.`);
+                // Check if the command is a file or program
+                if(commandParts.length === 1){
+                    const files: Array<{ name: string, mtime: number, size: number, is_dir: boolean }> = await invoke('list_directory_with_times', { path: directory });
+                    const matchingFile = files.find(file => file.name === commandParts[0]);
+                    if(matchingFile){
+                        if(matchingFile.is_dir){
+                            appendToTerminal(`'${commandParts[0]}' is not recognized as an internal or external command, operable program or file.`);
+                        }else{
+                            // Open the file
+
+                        }
+                    }else{
+                        appendToTerminal(`'${commandParts[0]}' is not recognized as an internal or external command, operable program or file.`);
+                    }
+                }else{
+                    appendToTerminal(`'${commandParts[0]}' is not recognized as an internal or external command, operable program or file.`);
+                }
                 break;
         }
     }
@@ -159,7 +255,10 @@ export default function Terminal() {
         <div className="relative text-white ml-[5vw] mt-[5vh] w-[50vw] text-sm" ref={terminalRef}>
             <div className="absolute w-[45vw] h-[80vh] bg-black/40 blur-none backdrop-blur-sm top-0 -z-100"></div>
             <div className="relative blur-none relative z-20 p-[2vh] mr-[5vw] break-words outline-none select-none cursor-text h-[80vh] overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                <div className="text-green-400 whitespace-pre overflow-wrap" dangerouslySetInnerHTML={{ __html: oldText.replace(/\n/g, '<br>') }}></div>
+
+                {/* DI JUD NI SYA MO WRAP ANG TEXT AMBOT NGANO*/}
+                <div className="text-green-400 whitespace-pre overflow-wrap w-[40vw] break-words break-all" >{oldText}</div>
+
                 <div className="flex items-center w-[40vw]">
                     <span className="pointer-events-none">{modifiedDirectory}{'>'}</span>
                     <span
