@@ -1,20 +1,24 @@
 import { useState, useRef, useEffect } from "react";
 import { useDirectory } from "../directoryContext";
 import { invoke } from '@tauri-apps/api/tauri';
-import { app } from "@tauri-apps/api";
-import { readDir } from '@tauri-apps/api/fs';
+import Window from '../program/window';
 
 export default function Terminal() {
     const { directory, setDirectory } = useDirectory();
     const [modifiedDirectory, setModifiedDirectory] = useState(directory.replace("C:\\honey\\root", "C:\\"));
-    const inputRef = useRef(null);
-    const terminalRef = useRef(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const terminalRef = useRef<HTMLDivElement>(null);
     const [oldText, setOldText] = useState("");
     const hasRunOnceRef = useRef(false);
 
     useEffect(() => {
+        if (!hasRunOnceRef.current) {
+            hasRunOnceRef.current = true;
+            appendSystemInfoToTerminal();
+        }
+
         if (terminalRef.current) {
-            (terminalRef.current as HTMLElement).removeEventListener("click", focusInput);
+            (terminalRef.current as HTMLElement).addEventListener("click", focusInput);
         }
 
         return () => {
@@ -28,7 +32,6 @@ export default function Terminal() {
     // TERMINAL FUNCTIONS
     /*------------------------------------------------------------------------------------------------------------*/
 
-    
     /*
         FETCH
         - Fetches the system information and appends it to the terminal
@@ -137,7 +140,15 @@ export default function Terminal() {
             console.log(error);
         }
     }
+
+    /*
+        OPEN [program]
+        - Opens a program
+    */
+    async function openProgram(program: string) {
+
     
+    }
     
     /*------------------------------------------------------------------------------------------------------------*/
 
@@ -154,8 +165,10 @@ export default function Terminal() {
             const sel = window.getSelection();
             range.selectNodeContents(inputRef.current);
             range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
+            if(sel){
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
         }
     };
 
@@ -224,9 +237,14 @@ export default function Terminal() {
                     exitDirectory();
                 }
                 break;
-            case "note":
-                // Create a modal
-                
+            case "open":
+                if(commandParts.length < 2){
+                    appendToTerminal("open: too few arguments");
+                }else if (commandParts.length > 2){
+                    appendToTerminal("open: too many arguments");
+                }else{
+                    openProgram(commandParts[1]);
+                }
                 
                 break;
             default:

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Terminal from "./terminal";
 import Manager from "./manager";
 import Voice from "./voice";
+import Taskbar from "./taskbar";
 
 export default function Desktop() {
     const router = useRouter();
@@ -19,6 +20,7 @@ export default function Desktop() {
                     alt="wallpaper" 
                 />
             </div>
+            <Taskbar/>
             <div className="grid grid-cols-2 grid-rows-2 h-[100vh]">
                 <div className="col-span-1 row-span-2">
                     <Terminal/>

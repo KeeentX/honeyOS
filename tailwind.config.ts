@@ -16,10 +16,14 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
+      colors:{
+        'primary': '#0C0E14',
+      }
     },
   },
   plugins: [
     require('tailwind-scrollbar'),
+    require("daisyui")
   ],
 };
 export default config;
