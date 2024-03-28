@@ -6,13 +6,20 @@ export default function Taskbar() {
     const [isWindowOpen, setIsWindowOpen] = useState(false);
     const [currentTime, setCurrentTime] = useState('');
     const [currentDate, setCurrentDate] = useState('');
+    const [isWindowMinimized, setIsWindowMinimized] = useState(false);
 
     const handleOpenWindow = () => {
+        setIsWindowMinimized(false);
         setIsWindowOpen(true);
-    };
+    };    
 
     const handleCloseWindow = () => {
         setIsWindowOpen(false);
+        setIsWindowMinimized(false);
+    };
+
+    const handleMinimizeWindow = () => {
+        setIsWindowMinimized(true);
     };
 
     // Update the current date and time every second
@@ -34,10 +41,15 @@ export default function Taskbar() {
                 {currentDate}
             </div>
 
-            <button className="btn" onClick={handleOpenWindow}>NOTE</button>
-            {isWindowOpen && (
-                <Window name="NOTE" onClose={handleCloseWindow}>
-                    hi
+            <button
+                className={`bg-primary h-[5vh] w-[5vh] rounded-lg ${isWindowMinimized ? 'border-white border-2 bg-transparent' : ''} ${isWindowOpen ? 'bg-red-500' : ''} `}
+                onClick={handleOpenWindow}
+            >NOTE</button>
+            {isWindowOpen && !isWindowMinimized && (
+                <Window name="NOTE" onClose={handleCloseWindow} onMinimize={handleMinimizeWindow}>
+                    <div className="p-4">
+                        <input type="text" className="text-white input input-bordered w-full max-w-xs" placeholder="Type something..." />
+                    </div>
                 </Window>
             )}
         </div>

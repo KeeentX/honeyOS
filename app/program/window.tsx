@@ -4,9 +4,10 @@ interface WindowProps {
   name: string;
   children: React.ReactNode;
   onClose: () => void;
+  onMinimize: () => void;
 }
 
-export default function Window({ name, children, onClose }: WindowProps) {
+export default function Window({ name, children, onClose, onMinimize}: WindowProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -69,7 +70,8 @@ export default function Window({ name, children, onClose }: WindowProps) {
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   const handleMinimize = () => {
-    setIsMinimized(!isMinimized);
+    setIsMinimized(true);
+    onMinimize();
   };
 
   const handleMaximize = () => {
@@ -85,7 +87,17 @@ export default function Window({ name, children, onClose }: WindowProps) {
         position: 'absolute',
         left: isMaximized ? 0 : `${position.x}px`,
         top: isMaximized ? 0: `${position.y}px`,
-        display: isMinimized ? 'none' : 'block',
+        // display: isMinimized ? 'none' : 'block',
+
+        // visibility: isMinimized ? 'hidden' : 'visible',
+        // opacity: isMinimized ? 0 : 1,
+        // transition: 'opacity 0.2s',
+
+        visibility: isMinimized ? 'hidden' : 'visible',
+        opacity: isMinimized ? 0 : 1,
+        height: isMinimized ? '0' : 'auto',
+        pointerEvents: isMinimized ? 'none' : 'auto',
+        transition: 'opacity 0.2s, height 0.2s',
       }}
     >
     <div
