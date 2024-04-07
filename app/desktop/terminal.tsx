@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useDirectory } from "../directoryContext";
 import { invoke } from '@tauri-apps/api/tauri';
+import { listen } from '@tauri-apps/api/event';
 import Window from '../program/window';
 
 export default function Terminal() {
@@ -10,12 +11,31 @@ export default function Terminal() {
     const terminalRef = useRef<HTMLDivElement>(null);
     const [oldText, setOldText] = useState("");
     const hasRunOnceRef = useRef(false);
+    const voices = useRef<SpeechSynthesisVoice[]>([]);
 
     useEffect(() => {
         if (!hasRunOnceRef.current) {
             hasRunOnceRef.current = true;
             appendSystemInfoToTerminal();
         }
+
+        // Fetch voices
+        const voiceTimer = setInterval(() => {
+            const availableVoices = window.speechSynthesis.getVoices();
+            if (availableVoices.length !== 0) {
+                voices.current = availableVoices;
+                clearInterval(voiceTimer);
+            }
+        }, 200);
+
+        // TRANSCRIPTION
+        const unlisten = listen<string>('transcribed_text', (event) => {
+            const [isCommandValid, command] = isCommand(event.payload);
+            if(isCommandValid){
+                appendToTerminal(`${modifiedDirectory}${'>'}${command}`);
+                executeCommand(command);
+            }
+        });
 
         if (terminalRef.current) {
             (terminalRef.current as HTMLElement).addEventListener("click", focusInput);
@@ -27,6 +47,27 @@ export default function Terminal() {
             }
         };
     }, []);
+
+    function isCommand(transcript: string): [boolean, string] {
+        const trimmedTranscript = transcript.trim().toLowerCase().replace(/[^\w\s]/gi, '');
+        const startsWithHoney = trimmedTranscript.startsWith('honey');
+        const endsWithPlease = trimmedTranscript.endsWith('please');
+    
+        if (startsWithHoney && endsWithPlease) {
+            const command = trimmedTranscript.slice(5, -6).trim();
+            return [true, command];
+        }
+        return [false, ''];
+    }
+
+    function speak(text: string) {
+        if(voices.current.length !== 0){
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = voices.current[2];
+            console.log(voices);
+            window.speechSynthesis.speak(utterance);
+        }  
+    }
 
     /*------------------------------------------------------------------------------------------------------------*/
     // TERMINAL FUNCTIONS
@@ -66,6 +107,8 @@ export default function Terminal() {
         `;
 
             appendToTerminal(asciiArt);
+            const speechText = `JOI, OS: Honey x86_64 CPU: ${cpu_name}, Speed: ${cpu_speed} MHz, Disk: ${diskInGB} GB, RAM: ${ramInGB} GB`;
+            speak(speechText);
         } catch (error) {
             console.error('Failed to fetch system info:', error);
         }
