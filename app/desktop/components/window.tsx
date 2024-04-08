@@ -1,13 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {Dispatch, useEffect, useRef, useState} from 'react';
 
 interface WindowProps {
   name: string;
   children: React.ReactNode;
-  onClose: () => void;
-  onMinimize: () => void;
+  setOpenedWindows:  Dispatch<React.JSX.Element[]>;
+  windowIndex: number;
+  openedWindows: React.JSX.Element[];
+  // onClose: () => void;
+  // onMinimize: () => void;
 }
 
-export default function Window({ name, children, onClose, onMinimize}: WindowProps) {
+export default function WindowScreen({ name, children, setOpenedWindows, openedWindows, windowIndex}: WindowProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -22,7 +25,7 @@ export default function Window({ name, children, onClose, onMinimize}: WindowPro
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose();
+        // onClose();
       }
     };
 
@@ -31,7 +34,7 @@ export default function Window({ name, children, onClose, onMinimize}: WindowPro
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onClose]);
+  }, [/* onClose */]);
 
   const handleMouseDown = (event: React.MouseEvent) => {
     setIsDragging(true);
@@ -40,7 +43,6 @@ export default function Window({ name, children, onClose, onMinimize}: WindowPro
       y: event.clientY - position.y,
     });
   };
-
   const handleMouseMove = (event: MouseEvent) => {
     if (isDragging) {
       setPosition({
@@ -53,6 +55,10 @@ export default function Window({ name, children, onClose, onMinimize}: WindowPro
   const handleMouseUp = () => {
     setIsDragging(false);
   };
+
+  const closeThisWindow = () => {
+    setOpenedWindows(openedWindows.filter((_, index) => index !== windowIndex));
+  }
 
   useEffect(() => {
     if (isDragging) {
@@ -69,33 +75,15 @@ export default function Window({ name, children, onClose, onMinimize}: WindowPro
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  const handleMinimize = () => {
-    setIsMinimized(true);
-    onMinimize();
-  };
-
-  const handleMaximize = () => {
-    setIsMaximized(!isMaximized);
-  };
-
   return (
-    <dialog
-      ref={dialogRef}
-      className="modal outline-none"
-      onClose={onClose}
+    <div
+      className="outline-none"
+      id={`window-${windowIndex}`}
       style={{
         position: 'absolute',
         left: isMaximized ? 0 : `${position.x}px`,
         top: isMaximized ? 0: `${position.y}px`,
-        // display: isMinimized ? 'none' : 'block',
-
-        // visibility: isMinimized ? 'hidden' : 'visible',
-        // opacity: isMinimized ? 0 : 1,
-        // transition: 'opacity 0.2s',
-
-        visibility: isMinimized ? 'hidden' : 'visible',
-        opacity: isMinimized ? 0 : 1,
-        height: isMinimized ? '0' : 'auto',
+        display: isMinimized ? 'none' : 'block',
         pointerEvents: isMinimized ? 'none' : 'auto',
         transition: 'opacity 0.2s, height 0.2s',
       }}
@@ -107,7 +95,7 @@ export default function Window({ name, children, onClose, onMinimize}: WindowPro
         minHeight: isMaximized ? '100vh' : '50vh',
       }}
     >
-      <div className="overflow-auto" style={{
+      <div className="overflow-auto relative" style={{
         minHeight: isMaximized ? '95vh' : '45vh',
       }}>
         {children}
@@ -115,19 +103,18 @@ export default function Window({ name, children, onClose, onMinimize}: WindowPro
       <div className="flex justify-between items-center text-white modal-action bg-primary absolute bottom-0 w-full h-[5vh] select-none" onMouseDown={handleMouseDown}>
         <span className="pl-[1vw]">{name}</span>
         <div className="flex space-x-2 items-center pr-[1vw] text-black">
-          <button className="w-[3vh] h-[3vh] rounded-full bg-green-700" onClick={handleMinimize}>
+          <button className="w-[3vh] h-[3vh] rounded-full bg-green-700" onClick={() => {setIsMinimized(true)}}>
             -
           </button>
-          <button className="w-[3vh] h-[3vh] rounded-full bg-yellow-300" onClick={handleMaximize}>
+          <button className="w-[3vh] h-[3vh] rounded-full bg-yellow-300" onClick={() => {setIsMaximized(true)}}>
             o
           </button>
-          <button className="w-[3vh] h-[3vh] rounded-full bg-red-700" onClick={onClose}>
+          <button className="w-[3vh] h-[3vh] rounded-full bg-red-700" onClick={closeThisWindow}>
             x
           </button>
         </div>
       </div>
     </div>
-  </dialog>
-
+  </div>
   );
 }
