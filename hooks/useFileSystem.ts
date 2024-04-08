@@ -21,9 +21,6 @@ export default function useFileSystem() {
         });
     }, []);
 
-    useEffect(() => {
-        console.log(dataDirPath, absolutePath)
-    }, [dataDirPath]);
     async function listDir() {
         const files: Array<FileProps> = await invoke('list_directory_with_times', { path: directory() + honey_directory()});
         const dirList: Array<HoneyFile> = [];
@@ -41,8 +38,9 @@ export default function useFileSystem() {
         return dirList;
     }
 
-    const makeDir = async (path: string) => {
-
+    async function makeDir (path: string) {
+        console.log("this is the new path", honey_directory() + "//" + path)
+        await createDir('honeyos' + honey_directory() + "\\" + path, { dir: BaseDirectory.Data, recursive: true });
     }
 
     const deleteDir = async (path: string) => {
@@ -82,6 +80,7 @@ export default function useFileSystem() {
         createDir,
         deleteDir,
         createFile,
+        makeDir,
         deleteFile,
         directory,
         honey_directory,

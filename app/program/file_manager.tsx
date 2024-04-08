@@ -10,7 +10,7 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
 
 }) {
     const [currentDirList, setCurrentDirList] = useState<HoneyFile[]>();
-    const {listDir, honey_directory, setDirectory, exitCurrentDir} = useFileSystem();
+    const {listDir, honey_directory, setDirectory, exitCurrentDir, makeDir} = useFileSystem();
     useEffect(() => {
         listDir().then((files) => {
             setCurrentDirList(files);
@@ -28,7 +28,9 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
                                  className="flex items-center justify-between border-b p-2 cursor-pointer"
                                     onClick={file.is_dir ? () => {
                                         const newDirectory = `${honey_directory()}\\${file.name}`;
+                                        console.log('new directory', newDirectory);
                                         setDirectory(newDirectory);
+                                
                                     }: () => {}}>
                                 <div>{file.name}</div>
                             </div>
@@ -37,7 +39,17 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
                 }
                 <div className={'p-2'}>
                     <button className={'p-2 border'}>Add File</button>
-                    <button className={'p-2 border'}>Add Folder</button>
+                    <button 
+                    className={'p-2 border'}
+                    onClick={async () => {
+                        try {
+                            await makeDir("new_folder")
+                            console.log("hello");
+                        } catch(e) {
+                            console.log('i am error', e)
+                        }
+                    }}
+                    >Add Folder</button>
                 </div>
             </div>
         </WindowScreen>
