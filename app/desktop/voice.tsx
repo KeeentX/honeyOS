@@ -75,16 +75,17 @@ export default function Voice() {
     }, []);
 
     return (
-        <div className="font-consolas relative text-white ml-[5vw] mt-[10vh] w-[50vw]">
-            <div className="absolute w-[40vw] h-[25vh] bg-black/40 blur-none backdrop-blur-sm top-0 -z-100"></div>
-            <div className="relative blur-none z-20 p-[2vh] mr-[5vw] break-words">
+        <div className={`font-consolas relative text-white ml-[5vw] mt-[10vh] h-[25vh] w-[40vw]
+         bg-black/40 blur-none backdrop-blur-sm top-0 -z-100`}>
+            <div className="blur-none z-20 p-[2vh] mr-[5vw] break-words">
                 MICROPHONE: {microphoneName}
             </div>
-            <div className="relative blur-none z-20 pl-[2vh] mr-[5vw] break-words w-[40vw] overflow-auto max-h-[7vh] min-h-[7vh] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            <div className={`blur-none z-20 pl-[2vh] mr-[5vw] break-words overflow-auto 
+            max-h-[7vh] min-h-[7vh] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent`}>
                 {transcript}
             </div>
-            <div className="blur-none flex justify-center w-[40vw]">
-                <canvas ref={canvasRef} width="600" height="100"></canvas>
+            <div className="blur-none relative h-[7vh]">
+                <canvas ref={canvasRef} className='w-full h-full absolute top-0'></canvas>
             </div>
         </div>
     );
