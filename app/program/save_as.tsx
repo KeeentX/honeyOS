@@ -11,11 +11,28 @@ export default function SaveAs({windowIndex, openedWindows, setOpenedWindows}: {
 })  {
     const [currentDirList, setCurrentDirList] = useState<HoneyFile[]>();
     const {listDir, honey_directory, setDirectory, exitCurrentDir, makeDir} = useFileSystem();
+    const [fileName, setFileName] = useState<string>(""); // Declare fileName variable
+    const [fileType, setFileType] = useState<string>(""); // Declare fileType variable
     useEffect(() => {
         listDir().then((files) => {
             setCurrentDirList(files);
         });
     }, [listDir()]);
+
+    const handleCancel = () => {
+        // Reset file name and file type
+        setFileName("");
+        setFileType("");
+    };
+
+    const handleSave = () => {
+        // Perform save action using the provided file name and file type
+        console.log("Saving file:", fileName, fileType);
+        // Reset file name and file type
+        setFileName("");
+        setFileType("");
+    };
+    
     return (
         <WindowScreen name={'Save as'} setOpenedWindows={setOpenedWindows} windowIndex={windowIndex}
                       openedWindows={openedWindows}>
@@ -64,6 +81,30 @@ export default function SaveAs({windowIndex, openedWindows, setOpenedWindows}: {
                         }
                     }}
                     >Add Folder</button>
+                </div>
+                <div className={"absolute top-0 p-2"}>
+                    <div className={"flex"}>
+                        <input
+                            type={"text"}
+                            value={fileName}
+                            onChange={(e) => setFileName(e.target.value)}
+                            placeholder={"File Name"}
+                            className={"border p-2 mr-2"}
+                        />
+                        <input
+                            type={"text"}
+                            value={fileType}
+                            onChange={(e) => setFileType(e.target.value)}
+                            placeholder={"File Type"}
+                            className={"border p-2 mr-2"}
+                        />
+                        <button onClick={handleCancel} className={"p-2 border"}>
+                            Cancel
+                        </button>
+                        <button onClick={handleSave} className={"p-2 border"}>
+                            Save
+                        </button>
+                    </div>
                 </div>
             </div>
         </WindowScreen>
