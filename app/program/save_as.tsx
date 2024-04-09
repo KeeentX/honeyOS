@@ -3,12 +3,12 @@ import React, {useEffect, useState} from "react";
 import useFileSystem from "@/hooks/useFileSystem";
 import {FileEntry} from "@tauri-apps/api/fs";
 import {HoneyFile} from "@/app/types";
-export default function FileManager({windowIndex, openedWindows, setOpenedWindows}: {
-    windowIndex: number,
+
+export default function SaveAs({windowIndex, openedWindows, setOpenedWindows}: {
+    windowIndex: number;
     openedWindows: React.JSX.Element[],
     setOpenedWindows: React.Dispatch<React.JSX.Element[]>
-
-}) {
+})  {
     const [currentDirList, setCurrentDirList] = useState<HoneyFile[]>();
     const {listDir, honey_directory, setDirectory, exitCurrentDir, makeDir} = useFileSystem();
     useEffect(() => {
@@ -17,7 +17,7 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
         });
     }, [listDir()]);
     return (
-        <WindowScreen name={'File Manager'} setOpenedWindows={setOpenedWindows} windowIndex={windowIndex}
+        <WindowScreen name={'Save as'} setOpenedWindows={setOpenedWindows} windowIndex={windowIndex}
                       openedWindows={openedWindows}>
             <div className="p-4 h-[60vh] w-[170vw] text-black">
                 <div className="flex items-center space-x-2">
