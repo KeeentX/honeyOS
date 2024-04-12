@@ -15,10 +15,13 @@ type appOpenedProps = {
 }
 
 export type WindowProps = {
+    name?: string;
+    children?: React.ReactNode;
     setOpenedWindows:  Dispatch<React.JSX.Element[]>;
     openedWindows: React.JSX.Element[];
-    setAppOpenedState:  Dispatch<appOpenedProps>;
+    setAppOpenedState?:  Dispatch<appOpenedProps>;
     appOpenedState: appOpenedProps;
+    windowIndex?: number;
 }
 
 export type HoneyFile = {
