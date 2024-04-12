@@ -1,12 +1,17 @@
-import { useState, useRef, useEffect } from "react";
-import { useDirectory } from "../directoryContext";
+import React, { useState, useRef, useEffect } from "react";
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
-import Window from '../program/window';
+import useFileSystem from "@/hooks/useFileSystem";
+import {FileProps, WindowProps} from "@/app/types";
+import Note from "@/app/program/note";
+import Settings from "@/app/program/settings";
+import Camera from "@/app/program/camera";
+import FileManager from "@/app/program/file_manager";
+import {OpenNote} from "@/app/desktop/programOpener";
 
-export default function Terminal() {
-    const { directory, setDirectory } = useDirectory();
-    const [modifiedDirectory, setModifiedDirectory] = useState(directory.replace("C:\\honey\\root", "C:\\"));
+export default function Terminal({setOpenedWindows, openedWindows, appOpenedState}: WindowProps) {
+    const {directory, setDirectory, honey_directory, exitCurrentDir, listDir} = useFileSystem();
+    // const [modifiedDirectory, setModifiedDirectory] = useState(directory.replace("C:\\honey\\root", "C:\\"));
     const inputRef = useRef<HTMLInputElement>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
     const [oldText, setOldText] = useState("");
@@ -32,7 +37,7 @@ export default function Terminal() {
         const unlisten = listen<string>('transcribed_text', (event) => {
             const [isCommandValid, command] = isCommand(event.payload);
             if(isCommandValid){
-                appendToTerminal(`${modifiedDirectory}${'>'}${command}`);
+                appendToTerminal(`${'honeyos' + honey_directory()}${'>'}${command}`);
                 executeCommand(command);
             }
         });
@@ -55,6 +60,7 @@ export default function Terminal() {
     
         if (startsWithHoney && endsWithPlease) {
             const command = trimmedTranscript.slice(5, -6).trim();
+            if(command === "open file manager") return [true, "open file_manager"];
             return [true, command];
         }
         return [false, ''];
@@ -120,17 +126,11 @@ export default function Terminal() {
     */
     async function listCurrentDirectory() {
         try {
-            appendToTerminal(`Directory of ${modifiedDirectory}\n`);
-
-            const files: Array<{ name: string, mtime: number, size: number, is_dir: boolean }> = await invoke('list_directory_with_times', { path: directory });
-            const fileDetails = files.map(file => {
-                const date = new Date(file.mtime * 1000).toLocaleDateString();
-                const time = new Date(file.mtime * 1000).toLocaleTimeString();
-                const size = file.is_dir ? 'DIR    ' : `${(file.size / 1024).toFixed(2)} KB`; // Check if it's a directory
-                console.log(file.is_dir);
-                return `${date} ${time}    ${size}    ${file.name}`;
-            }).join("\n");
-            appendToTerminal(fileDetails);
+            appendToTerminal(`\nDirectory of ${'honeyos' + honey_directory()}\n`);
+            const files2 = await listDir();
+            files2.map(file => {
+                appendToTerminal(`${file.mtime}    ${file.size}    ${file.name}`);
+            })
         } catch (error) {
             appendToTerminal(`Error listing directory: ${error}`);
             console.log(error);
@@ -143,17 +143,9 @@ export default function Terminal() {
     */
     async function enterDirectory(dir: string) {
         try {
-            const newDirectory = `${directory}\\${dir}`;
-            const files: Array<{ name: string, mtime: number, size: number, is_dir: boolean }> = await invoke('list_directory_with_times', { path: directory });
-            for (let i = 0; i < files.length; i++) {
-                if (files[i].name === dir) {
-                    setModifiedDirectory(newDirectory.replace("C:\\honey\\root\\", "C:\\"));
-                    setDirectory(newDirectory);
-                    return;
-                }
-            }
-
-            appendToTerminal(`Directory '${dir}' not found`);
+            const newDirectory = `${honey_directory()}\\${dir}`;
+            const files: Array<FileProps> = await invoke('list_directory_with_times', { path: directory() + newDirectory });
+            setDirectory(newDirectory);
         } catch (error) {
             appendToTerminal(`Error entering directory: ${error}`);
             console.log(error);
@@ -167,17 +159,8 @@ export default function Terminal() {
     async function exitDirectory() {
         try {
             // Check if the current directory is the root directory
-            if (directory === "C:\\honey\\root") {
-                return;
-            }
-
-            const newDirectory = directory.split("\\").slice(0, -1).join("\\");
-            setDirectory(newDirectory);
-            if(newDirectory === "C:\\honey\\root"){
-                setModifiedDirectory(newDirectory.replace("C:\\honey\\root", "C:\\"));
-            }else{
-                setModifiedDirectory(newDirectory.replace("C:\\honey\\root\\", "C:\\"));
-            }
+            if (directory().length === 0) return;
+            exitCurrentDir();
         } catch (error) {
             appendToTerminal(`Error exiting directory: ${error}`);
             console.log(error);
@@ -189,8 +172,29 @@ export default function Terminal() {
         - Opens a program
     */
     async function openProgram(program: string) {
+        switch (program) {
+            case "note":
+                OpenNote({appOpenedState, openedWindows, setOpenedWindows});
+                break;
+            case "settings":
+                setOpenedWindows(
+                    [...openedWindows,
+                        <Settings windowIndex={openedWindows.length} openedWindows={openedWindows} setOpenedWindows={setOpenedWindows}  />]
+                );
+                break;
+            case "camera":
+                setOpenedWindows(
+                    [...openedWindows,
+                        <Camera windowIndex={openedWindows.length} openedWindows={openedWindows} setOpenedWindows={setOpenedWindows}  />]
+                );
+                break;
+            case "file_manager":
+                setOpenedWindows(
+                    [...openedWindows,
+                        <FileManager windowIndex={openedWindows.length} openedWindows={openedWindows} setOpenedWindows={setOpenedWindows}  />]
+                );
 
-    
+        }
     }
     
     /*------------------------------------------------------------------------------------------------------------*/
@@ -222,7 +226,7 @@ export default function Terminal() {
             // Execute command, clear the input and append the user input to the terminal
             if (inputRef.current) {
                 const userInput: string = (inputRef.current as HTMLSpanElement).innerText.trim();
-                appendToTerminal(`${modifiedDirectory}${'>'}${userInput}`);
+                // appendToTerminal(`${modifiedDirectory}${'>'}${userInput}`);
                 (inputRef.current as HTMLSpanElement).innerText = ""; // Clear the input
                 moveCursorToEnd(); // Move the cursor to the end
                 executeCommand(userInput);
@@ -313,15 +317,15 @@ export default function Terminal() {
     }
 
     return (
-        <div className="relative text-white ml-[5vw] mt-[5vh] w-[50vw] text-sm" ref={terminalRef}>
+        <div className="relative text-white ml-[5vw] mt-[5vh] w-[50vw] text-sm bg-black/40 blur-none backdrop-blur-sm top-0 -z-100" ref={terminalRef}>
             <div className="absolute w-[45vw] h-[80vh] bg-black/40 blur-none backdrop-blur-sm top-0 -z-100"></div>
-            <div className="relative blur-none relative z-20 p-[2vh] mr-[5vw] break-words outline-none select-none cursor-text h-[80vh] overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            <div className=" blur-none relative z-20 p-[2vh] mr-[5vw] break-words outline-none select-none cursor-text h-[80vh] overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
 
                 {/* DI JUD NI SYA MO WRAP ANG TEXT AMBOT NGANO*/}
                 <div className="text-green-400 whitespace-pre overflow-wrap w-[40vw] break-words break-all" >{oldText}</div>
 
                 <div className="flex items-center w-[40vw]">
-                    <span className="pointer-events-none">{modifiedDirectory}{'>'}</span>
+                    <span className="pointer-events-none">{'honey_os' + honey_directory()}{'>'}</span>
                     <span
                         ref={inputRef}
                         className="outline-none select-text cursor-text flex-1 whitespace-pre-wrap break-words w-[30vw]"
