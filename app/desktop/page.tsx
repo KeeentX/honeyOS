@@ -21,7 +21,7 @@ export default function Desktop() {
         <div className="font-consolas relative w-full h-full">
             <div className="absolute w-full h-full -z-100">
                 <Image 
-                    src={'/wallpaper.png'} 
+                    src={'/newwallpaper.jpg'} 
                     height={100} 
                     width={100}
                     className="w-full h-full"
