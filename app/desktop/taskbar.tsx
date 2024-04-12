@@ -4,8 +4,9 @@ import Settings from "@/app/program/settings";
 import Camera from "@/app/program/camera";
 import FileManager from "@/app/program/file_manager";
 import {WindowProps} from "@/app/types";
+import {OpenNote} from "@/app/desktop/programOpener";
 
-export default function Taskbar({setOpenedWindows, openedWindows, appOpenedState, setAppOpenedState}: WindowProps) {
+export default function Taskbar({setOpenedWindows, openedWindows, appOpenedState}: WindowProps, openNote: () => void) {
     const [currentTime, setCurrentTime] = useState('');
     const [currentDate, setCurrentDate] = useState('');
     // Update the current date and time every second
@@ -22,33 +23,13 @@ export default function Taskbar({setOpenedWindows, openedWindows, appOpenedState
 
     return (
         <div
-            className="text-sm flex items-center justify-center font-consolas absolute top-0 text-white w-[100vw] bg-primary/80 pl-[1vw] pr-[1vw] h-[6vh] z-10">
+            className="text-sm flex items-center justify-center font-consolas absolute top-0 text-white w-[100vw] bg-primary/80 pl-[1vw] pr-[1vw] h-[6vh]">
             <div className="absolute right-0 pr-[1vw] ">
                 {currentTime}<br></br>
                 {currentDate}
             </div>
             <div className={'border p-3 cursor-pointer'}
-                 onClick={appOpenedState.note ? () => {
-                     openedWindows.map((window, index) => {
-                            if (index === appOpenedState.note - 1) {
-                                if(document.getElementById(`window-${index}`)?.style.display === "block")
-                                    document.getElementById(`window-${index}`)?.style.setProperty("display", "none");
-                                else
-                                    document.getElementById(`window-${index}`)?.style.setProperty("display", "block");
-                            }
-                        });
-                     } :
-                     () => {
-                         appOpenedState.note = openedWindows.length + 1;
-                         setOpenedWindows(
-                         [...openedWindows,
-                             <Note
-                                 windowIndex={openedWindows.length}
-                                 openedWindows={openedWindows}
-                                 setOpenedWindows={setOpenedWindows}
-                             />])
-                     }
-                 }>
+                 onClick={() => OpenNote({appOpenedState, openedWindows, setOpenedWindows})}>
                 Note
             </div>
             <div className={'border p-3 cursor-pointer'}
