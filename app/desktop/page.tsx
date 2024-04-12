@@ -6,9 +6,7 @@ import Terminal from "./terminal";
 import Manager from "./manager";
 import Voice from "./voice";
 import Taskbar from "./taskbar";
-import React, {useEffect, useState} from "react";
-import WindowScreen from "@/app/desktop/components/window";
-import Note from "@/app/program/note";
+import React, {useState} from "react";
 
 export default function Desktop() {
     const [openedWindows, setOpenedWindows] = useState<React.JSX.Element[]>([]);
@@ -18,11 +16,9 @@ export default function Desktop() {
         camera: 0,
         fileManager: 0
     });
-    useEffect(() => {
-        console.log(openedWindows)
-    }, [openedWindows]);
+
     return (
-        <div className="font-consolas relative">
+        <div className="font-consolas relative w-full h-full">
             <div className="absolute w-full h-full -z-100">
                 <Image 
                     src={'/wallpaper.png'} 
