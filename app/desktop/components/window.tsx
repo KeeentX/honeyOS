@@ -1,19 +1,10 @@
 import React, {Dispatch, useEffect, useRef, useState} from 'react';
+import {WindowProps} from "@/app/types";
 
-interface WindowProps {
-  name: string;
-  children: React.ReactNode;
-  setOpenedWindows:  Dispatch<React.JSX.Element[]>;
-  windowIndex: number;
-  openedWindows: React.JSX.Element[];
-  // onClose: () => void;
-  // onMinimize: () => void;
-}
-
-export default function WindowScreen({ name, children, setOpenedWindows, openedWindows, windowIndex}: WindowProps) {
+export default function WindowScreen({ name, children, setOpenedWindows, openedWindows, windowIndex, appOpenedState, setAppOpenedState}: WindowProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: window.innerWidth / 4, y: window.innerHeight / 4});
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
@@ -57,8 +48,16 @@ export default function WindowScreen({ name, children, setOpenedWindows, openedW
   };
 
   const closeThisWindow = () => {
+    setAppOpenedState && name == "note" && setAppOpenedState({...appOpenedState, note: 0});
+    setAppOpenedState && name == "settings" && setAppOpenedState({...appOpenedState, settings: 0});
+    setAppOpenedState && name == "file manager" && setAppOpenedState({...appOpenedState, fileManager: 0});
+    setAppOpenedState && name == "camera" && setAppOpenedState({...appOpenedState, camera: 0});
     setOpenedWindows(openedWindows.filter((_, index) => index !== windowIndex));
   }
+
+  useEffect(() => {
+    console.log('is minimized', isMinimized)
+  }, [isMinimized]);
 
   useEffect(() => {
     if (isDragging) {
@@ -77,27 +76,21 @@ export default function WindowScreen({ name, children, setOpenedWindows, openedW
 
   return (
     <div
-      className="outline-none"
+      className={`${isMaximized ? 'w-full h-full' : 'w-auto h-auto'} `}
       id={`window-${windowIndex}`}
       style={{
         position: 'absolute',
         left: isMaximized ? 0 : `${position.x}px`,
         top: isMaximized ? 0: `${position.y}px`,
         display: isMinimized ? 'none' : 'block',
-        pointerEvents: isMinimized ? 'none' : 'auto',
+        pointerEvents: 'auto',
         transition: 'opacity 0.2s, height 0.2s',
       }}
     >
     <div
-      className="modal-box bg-white text-black p-0 rounded-md m-0 border-primary border-2 relative"
-      style={{
-        minWidth: isMaximized ? '100vw' : 'auto',
-        minHeight: isMaximized ? '100vh' : '50vh',
-      }}
+      className={`${isMaximized ? 'w-full h-full' : 'w-[50vw] h-[50vh]'} bg-white text-black p-0 m-0 border-primary border-2 relative`}
     >
-      <div className="overflow-auto relative" style={{
-        minHeight: isMaximized ? '95vh' : '45vh',
-      }}>
+      <div className="relative w-full h-full">
         {children}
       </div>
       <div className="flex justify-between items-center text-white modal-action bg-primary absolute bottom-0 w-full h-[5vh] select-none" onMouseDown={handleMouseDown}>
@@ -106,7 +99,7 @@ export default function WindowScreen({ name, children, setOpenedWindows, openedW
           <button className="w-[3vh] h-[3vh] rounded-full bg-green-700" onClick={() => {setIsMinimized(true)}}>
             -
           </button>
-          <button className="w-[3vh] h-[3vh] rounded-full bg-yellow-300" onClick={() => {setIsMaximized(true)}}>
+          <button className="w-[3vh] h-[3vh] rounded-full bg-yellow-300" onClick={() => {setIsMaximized(prevState => !prevState)}}>
             o
           </button>
           <button className="w-[3vh] h-[3vh] rounded-full bg-red-700" onClick={closeThisWindow}>
