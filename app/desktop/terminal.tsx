@@ -7,8 +7,9 @@ import Note from "@/app/program/note";
 import Settings from "@/app/program/settings";
 import Camera from "@/app/program/camera";
 import FileManager from "@/app/program/file_manager";
+import {OpenNote} from "@/app/desktop/programOpener";
 
-export default function Terminal({setOpenedWindows, openedWindows}: WindowProps) {
+export default function Terminal({setOpenedWindows, openedWindows, appOpenedState}: WindowProps) {
     const {directory, setDirectory, honey_directory, exitCurrentDir, listDir} = useFileSystem();
     // const [modifiedDirectory, setModifiedDirectory] = useState(directory.replace("C:\\honey\\root", "C:\\"));
     const inputRef = useRef<HTMLInputElement>(null);
@@ -173,10 +174,7 @@ export default function Terminal({setOpenedWindows, openedWindows}: WindowProps)
     async function openProgram(program: string) {
         switch (program) {
             case "note":
-                setOpenedWindows(
-                    [...openedWindows,
-                        <Note windowIndex={openedWindows.length} openedWindows={openedWindows} setOpenedWindows={setOpenedWindows}  />]
-                );
+                OpenNote({appOpenedState, openedWindows, setOpenedWindows});
                 break;
             case "settings":
                 setOpenedWindows(
