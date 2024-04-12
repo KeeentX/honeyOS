@@ -1,15 +1,17 @@
 import React from "react";
 import WindowScreen from "@/app/desktop/components/window";
+import {WindowProps} from "@/app/types";
 
-export default function Note({windowIndex, openedWindows, setOpenedWindows}: {
-    windowIndex: number,
-    openedWindows: React.JSX.Element[],
-    setOpenedWindows: React.Dispatch<React.JSX.Element[]>,
-}) {
+export default function Note({windowIndex, openedWindows, setOpenedWindows, appOpenedState, setAppOpenedState}: WindowProps) {
     return (
-        <WindowScreen name="NOTE" windowIndex={windowIndex} openedWindows={openedWindows} setOpenedWindows={setOpenedWindows}>
-            <div className="p-4">
-                <textarea className="text-white input input-bordered w-full max-w-xs" placeholder="Type something..." />
+        <WindowScreen name="note"
+                      windowIndex={windowIndex}
+                      openedWindows={openedWindows}
+                      setOpenedWindows={setOpenedWindows}
+                      appOpenedState={appOpenedState}
+                      setAppOpenedState={setAppOpenedState}>
+            <div className="h-full w-full">
+                <textarea className="text-white input w-full h-full" placeholder="Type something..." />
             </div>
         </WindowScreen>
     )
