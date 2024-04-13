@@ -1,4 +1,4 @@
-import React, {Dispatch, useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {WindowProps} from "@/app/types";
 
 export default function WindowScreen({ name, children, setOpenedWindows, openedWindows, windowIndex, appOpenedState, setAppOpenedState}: WindowProps) {
