@@ -1,10 +1,10 @@
 import React, {Dispatch, ReactElement, SetStateAction, useEffect, useState} from 'react';
-import Note from "@/app/program/note";
 import Settings from "@/app/program/settings";
 import Camera from "@/app/program/camera";
 import FileManager from "@/app/program/file_manager";
 import {WindowProps} from "@/app/types";
 import {OpenNote} from "@/app/desktop/programOpener";
+import {FaNoteSticky} from "react-icons/fa6";
 
 export default function Taskbar({setOpenedWindows, openedWindows, appOpenedState}: WindowProps, openNote: () => void) {
     const [currentTime, setCurrentTime] = useState('');
@@ -23,14 +23,14 @@ export default function Taskbar({setOpenedWindows, openedWindows, appOpenedState
 
     return (
         <div
-            className="text-sm flex items-center justify-center font-consolas absolute top-0 text-white w-[100vw] bg-primary/80 pl-[1vw] pr-[1vw] h-[6vh]">
+            className="text-sm flex items-center justify-center font-consolas text-white w-[100vw] bg-primary/80 h-[6vh]">
             <div className="absolute right-0 pr-[1vw] ">
                 {currentTime}<br></br>
                 {currentDate}
             </div>
-            <div className={'border p-3 cursor-pointer'}
+            <div className={'p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300 rounded-md'}
                  onClick={() => OpenNote({appOpenedState, openedWindows, setOpenedWindows})}>
-                Note
+                <FaNoteSticky size={30} color={'yellow'}/>
             </div>
             <div className={'border p-3 cursor-pointer'}
                  onClick={() => setOpenedWindows(
