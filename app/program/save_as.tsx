@@ -3,55 +3,39 @@ import React, {useEffect, useState} from "react";
 import useFileSystem from "@/hooks/useFileSystem";
 import {FileEntry} from "@tauri-apps/api/fs";
 import {HoneyFile} from "@/app/types";
-import NewFilePopup from "../desktop/components/file_manager_popup";
-import {appOpenedProps, HoneyFile} from "@/app/types";
-import {app} from "@tauri-apps/api";
-export default function FileManager({windowIndex, openedWindows, setOpenedWindows, appOpenedState}: {
-    windowIndex: number,
+
+export default function SaveAs({windowIndex, openedWindows, setOpenedWindows}: {
+    windowIndex: number;
     openedWindows: React.JSX.Element[],
     setOpenedWindows: React.Dispatch<React.JSX.Element[]>
-    appOpenedState: appOpenedProps
-}) {
+})  {
     const [currentDirList, setCurrentDirList] = useState<HoneyFile[]>();
-
-    const {listDir, honey_directory, setHoneyDirectory, exitCurrentDir, makeDir} = useFileSystem();
-    const [showPopup, setShowPopup] = useState(false); // State to control popup visibility
-    const [popupType, setPopupType] = useState(""); // State to track the type of popup ("file" or "folder")
-    const [popupPath, setPopupPath] = useState(""); // State to track the path for creating the file or folder
-
+    const {listDir, honey_directory, setDirectory, exitCurrentDir, makeDir} = useFileSystem();
+    const [fileName, setFileName] = useState<string>(""); // Declare fileName variable
+    const [fileType, setFileType] = useState<string>(""); // Declare fileType variable
     useEffect(() => {
         listDir().then((files) => {
             setCurrentDirList(files);
         });
     }, [listDir()]);
 
-    const handleAddFile = () => {
-        setPopupType("file");
-        setShowPopup(true);
-    };
-    
-    const handleAddFolder = () => {
-        setPopupType("folder");
-        setShowPopup(true);
+    const handleCancel = () => {
+        // Reset file name and file type
+        setFileName("");
+        setFileType("");
     };
 
-    const handleSaveFolder = async (name) => {
-        try {
-          await makeDir(name);
-          console.log("Folder created successfully");
-          setShowPopup(false); // Close the popup after successful creation
-        } catch (error) {
-          console.log("Error creating folder:", error);
-        }
-      };
+    const handleSave = () => {
+        // Perform save action using the provided file name and file type
+        console.log("Saving file:", fileName, fileType);
+        // Reset file name and file type
+        setFileName("");
+        setFileType("");
+    };
     
-      const handleCancelFolder = () => {
-        setShowPopup(false);
-      };
-
     return (
-        <WindowScreen name={'File Manager'} setOpenedWindows={setOpenedWindows} windowIndex={windowIndex}
-                      openedWindows={openedWindows} appOpenedState={appOpenedState}>
+        <WindowScreen name={'Save as'} setOpenedWindows={setOpenedWindows} windowIndex={windowIndex}
+                      openedWindows={openedWindows}>
             <div className="p-4 h-[60vh] w-[170vw] text-black">
                 <div className="flex items-center space-x-2">
                     <button onClick={exitCurrentDir}>...</button>
@@ -64,7 +48,9 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
                             <div key={index}
                                  className="flex items-center justify-between border-b p-2 cursor-pointer"
                                     onClick={file.is_dir ? () => {
-                                        setHoneyDirectory(file.name);
+                                        const newDirectory = `${honey_directory()}\\${file.name}`;
+                                        console.log('new directory', newDirectory);
+                                        setDirectory(newDirectory);
                                 
                                     }: () => {}}>
                                 <div className="flex space-x-4">{file.is_dir ? <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
@@ -86,15 +72,40 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
                     <button className={'p-2 border'}>Add File</button>
                     <button 
                     className={'p-2 border'}
-                    onClick={handleAddFolder}
+                    onClick={async () => {
+                        try {
+                            await makeDir("new_folder")
+                            console.log("hello");
+                        } catch(e) {
+                            console.log('i am error', e)
+                        }
+                    }}
                     >Add Folder</button>
                 </div>
-                {showPopup && (
-                    <NewFilePopup
-                    onSave={handleSaveFolder}
-                    onCancel={handleCancelFolder}
-                    />
-                )}
+                <div className={"absolute top-0 p-2"}>
+                    <div className={"flex"}>
+                        <input
+                            type={"text"}
+                            value={fileName}
+                            onChange={(e) => setFileName(e.target.value)}
+                            placeholder={"File Name"}
+                            className={"border p-2 mr-2"}
+                        />
+                        <input
+                            type={"text"}
+                            value={fileType}
+                            onChange={(e) => setFileType(e.target.value)}
+                            placeholder={"File Type"}
+                            className={"border p-2 mr-2"}
+                        />
+                        <button onClick={handleCancel} className={"p-2 border"}>
+                            Cancel
+                        </button>
+                        <button onClick={handleSave} className={"p-2 border"}>
+                            Save
+                        </button>
+                    </div>
+                </div>
             </div>
         </WindowScreen>
     )
