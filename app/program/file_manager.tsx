@@ -12,7 +12,7 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
 }) {
     const [currentDirList, setCurrentDirList] = useState<HoneyFile[]>();
 
-    const {listDir, honey_directory, setHoneyDirectory, exitCurrentDir, makeDir, deleteDir, deleteFile} = useFileSystem();
+    const {listDir, honey_directory, setHoneyDirectory, exitCurrentDir, makeDir, deleteDir, deleteFile, createFile} = useFileSystem();
     const [showPopup, setShowPopup] = useState(false); // State to control popup visibility
     const [popupType, setPopupType] = useState(""); // State to track the type of popup ("file" or "folder")
     const [popupPath, setPopupPath] = useState(""); // State to track the path for creating the file or folder
@@ -42,19 +42,29 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
 
     const handleSaveFolder = async (name: string) => {
         try {
-          await makeDir(name);
-          console.log("Folder created successfully");
-          setShowPopup(false); // Close the popup after successful creation
+            await makeDir(name);
+            console.log("Folder created successfully");
+            setShowPopup(false); // Close the popup after successful creation
         } catch (error) {
-          console.log("Error creating folder:", error);
+            console.log("Error creating folder:", error);
         }
-      };
-    
-      const handleCancelFolder = () => {
-        setShowPopup(false);
-      };
+    };
 
-      const handleDelete = async (fileName: string, isDir: boolean) => {
+    const handleEmptyFile = async (name: string) => {
+        try {
+            await createFile(name, "");
+            console.log("File created successfully");
+            setShowPopup(false);
+        } catch (error) {
+            console.log("Error creating folder:", error);
+        }
+    }
+    
+    const handleCancelFolder = () => {
+        setShowPopup(false);
+    };
+
+    const handleDelete = async (fileName: string, isDir: boolean) => {
         try{
             if (isDir) {
                 // Delete directory
@@ -71,7 +81,7 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
         } catch (error) {
             console.log(`Error deleting ${isDir ? 'directory' : 'file'} "${fileName}":`, error);
         }
-      }
+    }
 
     return (
         <WindowScreen name={'File Manager'} setOpenedWindows={setOpenedWindows} windowIndex={windowIndex}
@@ -129,18 +139,21 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
                     }   )
                 }
                 <div className={'p-2'}>
-                    <button className={'p-2 border'}>Add File</button>
-                    <button 
-                    className={'p-2 border'}
-                    onClick={handleAddFolder}
-                    >Add Folder</button>
+                <button className={"p-2 border"} onClick={handleAddFile}>
+                    Add File
+                </button>
+                <button className={"p-2 border"} onClick={handleAddFolder}>
+                    Add Folder
+                </button>
                 </div>
                 {showPopup && (
                     <NewFilePopup
-                    onSave={handleSaveFolder}
-                    onCancel={handleCancelFolder}
+                        onSave={popupType === "folder" ? handleSaveFolder : handleEmptyFile}
+                        onCancel={handleCancelFolder}
+                        fileType={popupType}
                     />
                 )}
+
             </div>
         </WindowScreen>
     )
