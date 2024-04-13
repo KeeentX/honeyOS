@@ -317,9 +317,9 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
     }
 
     return (
-        <div className="relative text-white ml-[5vw] mt-[5vh] w-[50vw] text-sm bg-black/40 blur-none backdrop-blur-sm top-0 -z-100" ref={terminalRef}>
-            <div className="absolute w-[45vw] h-[80vh] bg-black/40 blur-none backdrop-blur-sm top-0 -z-100"></div>
-            <div className="relative blur-none z-20 p-[2vh] mr-[5vw] break-words outline-none select-none cursor-text h-[80vh] overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+        <div className="text-white ml-[5vw] mt-[5vh] w-[50vw] text-sm" ref={terminalRef}>
+            <div className={` z-20 p-[2vh] mr-[5vw] break-words outline-none select-none cursor-text h-[80vh] 
+            overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-black/40 blur-none backdrop-blur-sm `}>
 
                 {/* DI JUD NI SYA MO WRAP ANG TEXT AMBOT NGANO*/}
                 <div className="text-green-400 whitespace-pre overflow-wrap w-[40vw] break-words break-all" >{oldText}</div>

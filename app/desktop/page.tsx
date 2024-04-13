@@ -18,39 +18,43 @@ export default function Desktop() {
     });
 
     return (
-        <div className="font-consolas relative w-full h-full">
+        <div>
             <div className="absolute w-full h-full -z-100">
-                <Image 
-                    src={'/newwallpaper.jpg'} 
-                    height={100} 
+                <Image
+                    src={'/newwallpaper.jpg'}
+                    height={100}
                     width={100}
                     className="w-full h-full"
-                    alt="wallpaper" 
+                    alt="wallpaper"
                 />
             </div>
-            <Taskbar
-                setOpenedWindows={setOpenedWindows}
-                openedWindows={openedWindows}
-                appOpenedState={appOpenedState}
-                setAppOpenedState={setAppOpenedState}
-            />
-            <div className="grid grid-cols-2 grid-rows-2 h-[100vh]">
-                <div className="col-span-1 row-span-2">
-                    <Terminal
-                        setOpenedWindows={setOpenedWindows}
-                        openedWindows={openedWindows}
-                        appOpenedState={appOpenedState}
-                        setAppOpenedState={setAppOpenedState}/>
+            <div className="font-consolas relative w-full h-full">
+                <div className={'absolute z-20'}>
+                    {openedWindows.map((window, index) => window)}
                 </div>
-                <div className="col-start-2 row-span-1">
-                    <Manager/>
-                </div>
-                <div className="col-start-2 row-start-2">
-                    <Voice/>
+                <Taskbar
+                    setOpenedWindows={setOpenedWindows}
+                    openedWindows={openedWindows}
+                    appOpenedState={appOpenedState}
+                    setAppOpenedState={setAppOpenedState}
+                />
+                <div className="grid grid-cols-2 grid-rows-2 h-[100vh]">
+                    <div className="col-span-1 row-span-2">
+                        <Terminal
+                            setOpenedWindows={setOpenedWindows}
+                            openedWindows={openedWindows}
+                            appOpenedState={appOpenedState}
+                            setAppOpenedState={setAppOpenedState}/>
+                    </div>
+                    <div className="col-start-2 row-span-1">
+                        <Manager/>
+                    </div>
+                    <div className="col-start-2 row-start-2">
+                        <Voice/>
+                    </div>
                 </div>
             </div>
-
-            {openedWindows.map((window, index) => window)}
         </div>
+
     )
 }
