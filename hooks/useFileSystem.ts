@@ -41,7 +41,7 @@ export default function useFileSystem() {
 
     async function makeDir (path: string) {
         console.log("this is the new path", honey_directory() + "//" + path)
-        await createDir('honeyos' + honey_directory() + "\\" + path, { dir: BaseDirectory.Data, recursive: true });
+        await createDir('honeyos\\' + honey_directory() + "\\" + path, { dir: BaseDirectory.Data, recursive: true });
     }
 
     const deleteDir = async (path: string) => {
