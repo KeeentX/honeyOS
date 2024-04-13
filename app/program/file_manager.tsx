@@ -1,11 +1,8 @@
 import WindowScreen from "@/app/desktop/components/window";
 import React, {useEffect, useState} from "react";
 import useFileSystem from "@/hooks/useFileSystem";
-import {FileEntry} from "@tauri-apps/api/fs";
-import {HoneyFile} from "@/app/types";
 import NewFilePopup from "../desktop/components/file_manager_popup";
 import {appOpenedProps, HoneyFile} from "@/app/types";
-import {app} from "@tauri-apps/api";
 export default function FileManager({windowIndex, openedWindows, setOpenedWindows, appOpenedState}: {
     windowIndex: number,
     openedWindows: React.JSX.Element[],
@@ -35,7 +32,7 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
         setShowPopup(true);
     };
 
-    const handleSaveFolder = async (name) => {
+    const handleSaveFolder = async (name: string) => {
         try {
           await makeDir(name);
           console.log("Folder created successfully");
