@@ -1,5 +1,5 @@
 import {dataDir} from '@tauri-apps/api/path';
-import {BaseDirectory, createDir, FileEntry, readDir} from '@tauri-apps/api/fs';
+import {BaseDirectory, createDir, FileEntry, readDir, removeDir, removeFile} from '@tauri-apps/api/fs';
 import {useEffect, useState} from "react";
 import {FileProps, HoneyFile} from "@/app/types";
 import {invoke} from "@tauri-apps/api/tauri";
@@ -45,7 +45,7 @@ export default function useFileSystem() {
     }
 
     const deleteDir = async (path: string) => {
-
+        await removeDir('honeyos\\' + honey_directory() + "\\" + path, { dir: BaseDirectory.Data, recursive: true });
     }
 
     const createFile = async (path: string) => {
@@ -53,7 +53,7 @@ export default function useFileSystem() {
     }
 
     const deleteFile = async (path: string) => {
-
+        await removeFile('honeyos\\' + honey_directory() + '\\' + path, { dir: BaseDirectory.Data});
     }
 
     const honey_directory = () => {

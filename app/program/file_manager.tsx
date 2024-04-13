@@ -3,6 +3,7 @@ import React, {useEffect, useState} from "react";
 import useFileSystem from "@/hooks/useFileSystem";
 import NewFilePopup from "../desktop/components/file_manager_popup";
 import {appOpenedProps, HoneyFile} from "@/app/types";
+import { DocumentTextIcon, EllipsisVerticalIcon, FolderIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid";
 export default function FileManager({windowIndex, openedWindows, setOpenedWindows, appOpenedState}: {
     windowIndex: number,
     openedWindows: React.JSX.Element[],
@@ -11,10 +12,17 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
 }) {
     const [currentDirList, setCurrentDirList] = useState<HoneyFile[]>();
 
-    const {listDir, honey_directory, setHoneyDirectory, exitCurrentDir, makeDir} = useFileSystem();
+    const {listDir, honey_directory, setHoneyDirectory, exitCurrentDir, makeDir, deleteDir, deleteFile} = useFileSystem();
     const [showPopup, setShowPopup] = useState(false); // State to control popup visibility
     const [popupType, setPopupType] = useState(""); // State to track the type of popup ("file" or "folder")
     const [popupPath, setPopupPath] = useState(""); // State to track the path for creating the file or folder
+    const [showOptionsDropdown, setShowOptionsDropdown] = useState(false); // State to control options dropdown visibility
+    const [showOptionsDropdownForFile, setShowOptionsDropdownForFile] = useState<number | null>(null); // State to track which file's options dropdown is open
+
+    const handleOptionsButtonClick = (index: number) => {
+        setShowOptionsDropdownForFile(index === showOptionsDropdownForFile ? null : index); // Toggle the dropdown for the clicked file
+    };
+
 
     useEffect(() => {
         listDir().then((files) => {
@@ -46,6 +54,25 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
         setShowPopup(false);
       };
 
+      const handleDelete = async (fileName: string, isDir: boolean) => {
+        try{
+            if (isDir) {
+                // Delete directory
+                await deleteDir(fileName);
+            } else {
+                // Delete file
+                await deleteFile(fileName);
+            }
+            console.log(`${isDir ? 'Directory' : 'File'} "${fileName}" deleted succesfully`);
+            // Refresh the directory listing after the deletion
+            listDir().then((files) => {
+                setCurrentDirList(files);
+            });
+        } catch (error) {
+            console.log(`Error deleting ${isDir ? 'directory' : 'file'} "${fileName}":`, error);
+        }
+      }
+
     return (
         <WindowScreen name={'File Manager'} setOpenedWindows={setOpenedWindows} windowIndex={windowIndex}
                       openedWindows={openedWindows} appOpenedState={appOpenedState}>
@@ -59,22 +86,44 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
                     currentDirList?.map((file, index) => {
                         return (
                             <div key={index}
-                                 className="flex items-center justify-between border-b p-2 cursor-pointer"
+                                 className="flex items-center justify-between p-1 cursor-pointer w-[47vw] max-w-[170vw]"
                                     onClick={file.is_dir ? () => {
                                         setHoneyDirectory(file.name);
                                 
                                     }: () => {}}>
-                                <div className="flex space-x-4">{file.is_dir ? <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                                    <path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
-                                    </svg> : (file.name.includes(".txt") ? <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                                    <path fillRule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clipRule="evenodd" />
-                                    <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
-                                    </svg>
-                                    : <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                                    <path fillRule="evenodd" d="M1.5 6a2.25 2.25 0 0 1 2.25-2.25h16.5A2.25 2.25 0 0 1 22.5 6v12a2.25 2.25 0 0 1-2.25 2.25H3.75A2.25 2.25 0 0 1 1.5 18V6ZM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0 0 21 18v-1.94l-2.69-2.689a1.5 1.5 0 0 0-2.12 0l-.88.879.97.97a.75.75 0 1 1-1.06 1.06l-5.16-5.159a1.5 1.5 0 0 0-2.12 0L3 16.061Zm10.125-7.81a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Z" clipRule="evenodd" />
-                                    </svg>
+                                <div className="flex items-center space-x-4 flex-grow">
+                                    {file.is_dir ? (
+                                        <FolderIcon className="w-6 h-6" />
+                                    ) : file.name.includes(".txt") ? (
+                                        <DocumentTextIcon className="w-6 h-6" />
+                                    ) : (
+                                        <PhotoIcon className="w-6 h-6" />
                                     )}
-                                <span>{file.name}</span></div>
+                                    <span>{file.name}</span>
+                                </div>
+                                <div className="relative">
+                                    <button className="w-6 h-6 border-none focus:outline-none"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        // Show or hide options dropdown
+                                        handleOptionsButtonClick(index);
+                                    }}>
+                                        <EllipsisVerticalIcon className="w-6 h-6" />
+                                    </button>
+                                    {/* Delete option */}
+                                    {showOptionsDropdownForFile === index && (
+                                        <div className="absolute right-0 mt-2 w-36 bg-white shadow-md rounded-lg z-10">
+                                            {/* Delete option */}
+                                            <button className="flex border w-full px-4 py-2 space-x-2 items-center hover:bg-gray-200 focus:outline-none" onClick={(e) => {
+                                                e.stopPropagation();
+                                                // Pass the file name and type (file or directory) to the delete function 
+                                                handleDelete(file.name, file.is_dir);
+                                            }}>
+                                                <TrashIcon className="w-4 h-4" /> <span>Delete</span>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )
                     }   )
