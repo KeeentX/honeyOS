@@ -7,7 +7,7 @@ export type FileProps = {
     is_dir: boolean
 }
 
-type appOpenedProps = {
+export type appOpenedProps = {
     note: number,
     settings: number,
     camera: number,

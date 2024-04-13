@@ -4,17 +4,21 @@ import useFileSystem from "@/hooks/useFileSystem";
 import {FileEntry} from "@tauri-apps/api/fs";
 import {HoneyFile} from "@/app/types";
 import NewFilePopup from "../desktop/components/file_manager_popup";
-export default function FileManager({windowIndex, openedWindows, setOpenedWindows}: {
+import {appOpenedProps, HoneyFile} from "@/app/types";
+import {app} from "@tauri-apps/api";
+export default function FileManager({windowIndex, openedWindows, setOpenedWindows, appOpenedState}: {
     windowIndex: number,
     openedWindows: React.JSX.Element[],
     setOpenedWindows: React.Dispatch<React.JSX.Element[]>
-
+    appOpenedState: appOpenedProps
 }) {
     const [currentDirList, setCurrentDirList] = useState<HoneyFile[]>();
-    const {listDir, honey_directory, setDirectory, exitCurrentDir, makeDir} = useFileSystem();
+
+    const {listDir, honey_directory, setHoneyDirectory, exitCurrentDir, makeDir} = useFileSystem();
     const [showPopup, setShowPopup] = useState(false); // State to control popup visibility
     const [popupType, setPopupType] = useState(""); // State to track the type of popup ("file" or "folder")
     const [popupPath, setPopupPath] = useState(""); // State to track the path for creating the file or folder
+
     useEffect(() => {
         listDir().then((files) => {
             setCurrentDirList(files);
@@ -47,7 +51,7 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
 
     return (
         <WindowScreen name={'File Manager'} setOpenedWindows={setOpenedWindows} windowIndex={windowIndex}
-                      openedWindows={openedWindows}>
+                      openedWindows={openedWindows} appOpenedState={appOpenedState}>
             <div className="p-4 h-[60vh] w-[170vw] text-black">
                 <div className="flex items-center space-x-2">
                     <button onClick={exitCurrentDir}>...</button>
@@ -60,9 +64,7 @@ export default function FileManager({windowIndex, openedWindows, setOpenedWindow
                             <div key={index}
                                  className="flex items-center justify-between border-b p-2 cursor-pointer"
                                     onClick={file.is_dir ? () => {
-                                        const newDirectory = `${honey_directory()}\\${file.name}`;
-                                        console.log('new directory', newDirectory);
-                                        setDirectory(newDirectory);
+                                        setHoneyDirectory(file.name);
                                 
                                     }: () => {}}>
                                 <div className="flex space-x-4">{file.is_dir ? <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">

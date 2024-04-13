@@ -10,7 +10,7 @@ import FileManager from "@/app/program/file_manager";
 import {OpenNote} from "@/app/desktop/programOpener";
 
 export default function Terminal({setOpenedWindows, openedWindows, appOpenedState}: WindowProps) {
-    const {directory, setDirectory, honey_directory, exitCurrentDir, listDir} = useFileSystem();
+    const {directory, setHoneyDirectory, honey_directory, exitCurrentDir, listDir} = useFileSystem();
     // const [modifiedDirectory, setModifiedDirectory] = useState(directory.replace("C:\\honey\\root", "C:\\"));
     const inputRef = useRef<HTMLInputElement>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
@@ -126,7 +126,7 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
     */
     async function listCurrentDirectory() {
         try {
-            appendToTerminal(`\nDirectory of ${'honeyos' + honey_directory()}\n`);
+            appendToTerminal(`\nDirectory of ${(honey_directory().length ? 'honeyos\\' : 'honeyos') + honey_directory()}\n`);
             const files2 = await listDir();
             files2.map(file => {
                 appendToTerminal(`${file.mtime}    ${file.size}    ${file.name}`);
@@ -144,8 +144,10 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
     async function enterDirectory(dir: string) {
         try {
             const newDirectory = `${honey_directory()}\\${dir}`;
-            const files: Array<FileProps> = await invoke('list_directory_with_times', { path: directory() + newDirectory });
-            setDirectory(newDirectory);
+            console.log('new directory', directory() + newDirectory );
+            await invoke('list_directory_with_times', { path: directory() + '\\' + newDirectory });
+            setHoneyDirectory(dir);
+            console.log(directory() + newDirectory)
         } catch (error) {
             appendToTerminal(`Error entering directory: ${error}`);
             console.log(error);
@@ -191,7 +193,11 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
             case "file_manager":
                 setOpenedWindows(
                     [...openedWindows,
-                        <FileManager windowIndex={openedWindows.length} openedWindows={openedWindows} setOpenedWindows={setOpenedWindows}  />]
+                        <FileManager
+                            windowIndex={openedWindows.length}
+                            openedWindows={openedWindows}
+                            setOpenedWindows={setOpenedWindows}
+                            appOpenedState={appOpenedState}/>]
                 );
 
         }
@@ -255,7 +261,7 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
                 if(commandParts.length > 1){
                     appendToTerminal("list: too many arguments");
                 }else{
-                    listCurrentDirectory();
+                    await listCurrentDirectory();
                 }
 
                 break;
@@ -265,7 +271,7 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
                 }else if (commandParts.length > 2){
                     appendToTerminal("enter: too many arguments");
                 }else{
-                    enterDirectory(commandParts[1]);
+                    await enterDirectory(commandParts[1]);
                 }
 
                 break;
@@ -325,7 +331,7 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
                 <div className="text-green-400 whitespace-pre overflow-wrap w-[40vw] break-words break-all" >{oldText}</div>
 
                 <div className="flex items-center w-[40vw]">
-                    <span className="pointer-events-none">{'honey_os' + honey_directory()}{'>'}</span>
+                    <span className="pointer-events-none">{(honey_directory().length ? 'honey_os\\' : 'honey_os') + honey_directory()}{'>'}</span>
                     <span
                         ref={inputRef}
                         className="outline-none select-text cursor-text flex-1 whitespace-pre-wrap break-words w-[30vw]"

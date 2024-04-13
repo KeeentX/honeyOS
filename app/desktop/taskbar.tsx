@@ -61,6 +61,7 @@ export default function Taskbar({setOpenedWindows, openedWindows, appOpenedState
                              windowIndex={openedWindows.length}
                              openedWindows={openedWindows}
                              setOpenedWindows={setOpenedWindows}
+                             appOpenedState={appOpenedState}
                          />])
                  }>
                 File Manager

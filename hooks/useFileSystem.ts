@@ -22,7 +22,8 @@ export default function useFileSystem() {
     }, []);
 
     async function listDir() {
-        const files: Array<FileProps> = await invoke('list_directory_with_times', { path: directory() + honey_directory()});
+        console.log("this is the directory", directory() + '\\' + honey_directory())
+        const files: Array<FileProps> = await invoke('list_directory_with_times', { path: directory() + '\\' + honey_directory()});
         const dirList: Array<HoneyFile> = [];
         files.map(file => {
             const date = new Date(file.mtime * 1000).toLocaleDateString();
@@ -56,10 +57,10 @@ export default function useFileSystem() {
     }
 
     const honey_directory = () => {
-        return dataDirPath.join('/');
+        return dataDirPath.join('\\');
     }
 
-    const setDirectory = (path: string) => {
+    const setHoneyDirectory = (path: string) => {
         setDataDirPath((prev) => [...prev, path]);
     }
 
@@ -84,7 +85,7 @@ export default function useFileSystem() {
         deleteFile,
         directory,
         honey_directory,
-        setDirectory,
+        setHoneyDirectory,
         exitCurrentDir
     }
 }
