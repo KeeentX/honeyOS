@@ -1,5 +1,5 @@
 import {dataDir} from '@tauri-apps/api/path';
-import {BaseDirectory, createDir, FileEntry, readDir} from '@tauri-apps/api/fs';
+import {BaseDirectory, createDir, FileEntry, readDir, removeDir, removeFile, writeTextFile} from '@tauri-apps/api/fs';
 import {useEffect, useState} from "react";
 import {FileProps, HoneyFile} from "@/app/types";
 import {invoke} from "@tauri-apps/api/tauri";
@@ -22,7 +22,7 @@ export default function useFileSystem() {
     }, []);
 
     async function listDir() {
-        console.log("this is the directory", directory() + '\\' + honey_directory())
+        // console.log("this is the directory", directory() + '\\' + honey_directory())
         const files: Array<FileProps> = await invoke('list_directory_with_times', { path: directory() + '\\' + honey_directory()});
         const dirList: Array<HoneyFile> = [];
         files.map(file => {
@@ -40,20 +40,20 @@ export default function useFileSystem() {
     }
 
     async function makeDir (path: string) {
-        console.log("this is the new path", honey_directory() + "//" + path)
+        console.log("this is the new path", honey_directory() + "//" + path);
         await createDir('honeyos\\' + honey_directory() + "\\" + path, { dir: BaseDirectory.Data, recursive: true });
     }
 
     const deleteDir = async (path: string) => {
-
+        await removeDir('honeyos\\' + honey_directory() + "\\" + path, { dir: BaseDirectory.Data, recursive: true });
     }
 
-    const createFile = async (path: string) => {
-
+    const createFile = async (path: string, content: string) => {
+        await writeTextFile('honeyos\\' + honey_directory() + "\\" + path, content, { dir: BaseDirectory.Data });
     }
 
     const deleteFile = async (path: string) => {
-
+        await removeFile('honeyos\\' + honey_directory() + '\\' + path, { dir: BaseDirectory.Data});
     }
 
     const honey_directory = () => {

@@ -6,14 +6,23 @@ type CancelHandler = () => void;
 interface NewFilePopupProps {
   onSave: SaveHandler;
   onCancel: CancelHandler;
+  fileType?: string; // Added fileType prop
 }
 
-export default function NewFilePopup({ onSave, onCancel }: NewFilePopupProps) {
+export default function NewFilePopup({ onSave, onCancel, fileType }: NewFilePopupProps) {
   const [name, setName] = useState("");
+  const [selectedFileType, setSelectedFileType] = useState(fileType || ""); // Initialize with fileType if provided
+
 
   const handleSave = () => {
-    onSave(name);
+    const fileName = selectedFileType === "folder" ? name : (selectedFileType === "file" ? `${name}.txt` : `${name}${selectedFileType}`);
+    onSave(fileName);
     setName("");
+    setSelectedFileType(""); // Reset selectedFileType after saving
+  };
+
+  const setFileType = (value: string) => {
+    setSelectedFileType(value);
   };
 
   return (
@@ -24,8 +33,21 @@ export default function NewFilePopup({ onSave, onCancel }: NewFilePopupProps) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="border p-2 mb-2 bg-inherit"
-          placeholder="Enter name"
+          placeholder={`Enter ${fileType === "folder" ? "folder" : "file"} name`}
         />
+        {/* Render additional options for file type if fileType is specified */}
+        {fileType === "file" && (
+          <div>
+            <label className="block mb-1">Choose file type:
+              {/* Removed value={fileType} */}
+              <select onChange={(e) => setFileType(e.target.value)} className="border p-2 bg-inherit">
+                <option value=".txt">.txt(Text File)</option>
+                <option value=".png">.png(PNG Image)</option>
+                <option value=".jpg">.jpg(JPEG Image)</option>
+              </select>
+            </label>
+          </div>
+        )}
         <div className="flex justify-end">
           <button className="p-2 border mr-2" onClick={onCancel}>
             Cancel
