@@ -1,21 +1,14 @@
-import { useEffect, useState, useRef } from 'react';
-import { listen } from '@tauri-apps/api/event';
+import {useEffect, useState, useRef, useContext} from 'react';
+import {SpeechRecognitionContext} from "@/app/context/speechRecognitionContext";
 
 export default function Voice() {
-    const [transcript, setTranscript] = useState<string>('Speak');
-    const [microphoneName, setMicrophoneName] = useState<string>('Unknown');
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const audioContextRef = useRef<AudioContext | null>(null);
+    const {payload, audioContextRef} = useContext(SpeechRecognitionContext);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const dataArrayRef = useRef<Uint8Array | null>(null);
+    const [microphoneName, setMicrophoneName] = useState<string>('Unknown');
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
-        // TRANSCRIPTION
-        const unlisten = listen<string>('transcribed_text', (event) => {
-            setTranscript(event.payload);
-        });
-
-        // Get the name of the current microphone and start audio analysis
         navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
             const audioContext = new AudioContext();
             audioContextRef.current = audioContext;
@@ -45,7 +38,7 @@ export default function Voice() {
                             canvasCtx.lineWidth = 3;
                             canvasCtx.strokeStyle = 'rgb(255, 255, 255)';
                             canvasCtx.beginPath();
-                            const sliceWidth = canvas.width * 1.0 / analyser.frequencyBinCount;
+                            const sliceWidth = canvas.width / analyser.frequencyBinCount;
                             let x = 0;
                             for (let i = 0; i < analyser.frequencyBinCount; i++) {
                                 const v = dataArrayRef.current[i] / 128.0;
@@ -66,14 +59,7 @@ export default function Voice() {
                 }
             }
         });
-
-        return () => {
-            unlisten.then((unlistenFn) => unlistenFn());
-            // Close the audio context when the component unmounts
-            audioContextRef.current?.close();
-        };
     }, []);
-
     return (
         <div className={`font-consolas relative text-white ml-[5vw] mt-[10vh] w-[50vw]absolute w-[40vw] h-[25vh] 
         bg-black/40 blur-none backdrop-blur-sm top-0 -z-100`}>
@@ -82,10 +68,10 @@ export default function Voice() {
             </div>
             <div className={`blur-none z-20 pl-[2vh] mr-[5vw] break-words overflow-x-auto
              min-h-[4vh] max-h-[4vh] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent`}>
-                {transcript}
+                {payload}
             </div>
             <div className="blur-none flex justify-center w-[40vw]">
-                <canvas ref={canvasRef} className={`w-full p-1 h-[100px]`}></canvas>
+               <canvas ref={canvasRef} className={`w-full p-1 h-[100px]`}></canvas>
             </div>
         </div>
     );

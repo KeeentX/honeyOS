@@ -1,5 +1,5 @@
 import {dataDir} from '@tauri-apps/api/path';
-import {BaseDirectory, createDir, FileEntry, readDir, removeDir, removeFile, writeTextFile} from '@tauri-apps/api/fs';
+import {BaseDirectory, createDir, readTextFile, removeDir, removeFile, writeTextFile} from '@tauri-apps/api/fs';
 import {useEffect, useState} from "react";
 import {FileProps, HoneyFile} from "@/app/types";
 import {invoke} from "@tauri-apps/api/tauri";
@@ -9,16 +9,17 @@ export default function useFileSystem() {
     const [absolutePath, setAbsolutePath] = useState<string>("");
 
     useEffect(() => {
-
         //Creates the File Management Directory if it doesn't exist
         createDir('honeyos', { dir: BaseDirectory.Data, recursive: true }).then(r => {
             console.log('Directory created: ', r);
         });
 
         //Fetches the data absolute path
-        dataDir().then((path) => {
+        const setAbsPath = async () => {
+            const path = await dataDir();
             setAbsolutePath(path);
-        });
+        }
+        setAbsPath().then(r => console.log('absolute path set'));
     }, []);
 
     async function listDir() {
@@ -48,8 +49,38 @@ export default function useFileSystem() {
         await removeDir('honeyos\\' + honey_directory() + "\\" + path, { dir: BaseDirectory.Data, recursive: true });
     }
 
-    const createFile = async (path: string, content: string) => {
-        await writeTextFile('honeyos\\' + honey_directory() + "\\" + path, content, { dir: BaseDirectory.Data });
+    const createFile = async (path: string) => {
+        await writeTextFile('honeyos\\' + honey_directory() + "\\" + path, "", { dir: BaseDirectory.Data });
+    }
+
+    const readFile = async (path: string) : Promise<{status: boolean, content: string}> => {
+        try {
+            const content = await readTextFile('honeyos\\' + honey_directory() + '\\' + path, {dir: BaseDirectory.Data});
+            return {
+                status: true,
+                content: content
+            }
+        } catch (error) {
+            return {
+                status: false,
+                content: error as string
+            }
+        }
+    }
+
+    const writeFile = async (path: string, content: string) : Promise<{status: boolean, message: string}> => {
+        try {
+            await writeTextFile(path, content, { dir: BaseDirectory.Data });
+            return {
+                status: true,
+                message: 'File saved successfully'
+            };
+        } catch (error) {
+            return {
+                status: false,
+                message: error as string
+            }
+        }
     }
 
     const deleteFile = async (path: string) => {
@@ -86,6 +117,10 @@ export default function useFileSystem() {
         directory,
         honey_directory,
         setHoneyDirectory,
-        exitCurrentDir
+        exitCurrentDir,
+        readFile,
+        writeFile,
+        absolutePath,
+        dataDirPath
     }
 }

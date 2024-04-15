@@ -1,14 +1,17 @@
-import React, {Dispatch, ReactElement, SetStateAction, useEffect, useState} from 'react';
-import Settings from "@/app/program/settings";
-import Camera from "@/app/program/camera";
-import FileManager from "@/app/program/file_manager";
-import {WindowProps} from "@/app/types";
-import {OpenNote} from "@/app/desktop/programOpener";
-import {FaNoteSticky} from "react-icons/fa6";
+import React, {useContext, useEffect, useState} from 'react';
+import {OpenCamera, OpenFileManager, OpenNote, OpenSettings} from "@/app/desktop/programOpener";
+import {FaGear, FaNoteSticky} from "react-icons/fa6";
+import {OpenAppsContext} from "@/app/context/openedAppsContext";
+import {FaCamera, FaFolder} from "react-icons/fa";
+import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
+import useFileSystem from "@/hooks/useFileSystem";
 
-export default function Taskbar({setOpenedWindows, openedWindows, appOpenedState}: WindowProps, openNote: () => void) {
+export default function Taskbar() {
     const [currentTime, setCurrentTime] = useState('');
     const [currentDate, setCurrentDate] = useState('');
+    const {note, camera, settings, fileManager, setAppOpenedState} = useContext(OpenAppsContext);
+    const {openedWindows, setOpenedWindows} = useContext(OpenedWindowsContext);
+    const {directory, honey_directory} = useFileSystem();
     // Update the current date and time every second
     useEffect(() => {
         const interval = setInterval(() => {
@@ -23,48 +26,51 @@ export default function Taskbar({setOpenedWindows, openedWindows, appOpenedState
 
     return (
         <div
-            className="text-sm flex items-center justify-center font-consolas text-white w-[100vw] bg-primary/80 h-[6vh]">
+            className="text-sm flex items-center justify-center font-consolas space-x-1 text-white w-[100vw] bg-primary/80 h-[6vh]">
             <div className="absolute right-0 pr-[1vw] ">
                 {currentTime}<br></br>
                 {currentDate}
             </div>
-            <div className={'p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300 rounded-md'}
-                 onClick={() => OpenNote({appOpenedState, openedWindows, setOpenedWindows})}>
+            <div
+                className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300 
+                rounded-md ${note ? 'bg-gray-700 ' : ''}
+                `}
+                onClick={() => OpenNote({
+                    openedWindows,
+                    setOpenedWindows,
+                }, note, setAppOpenedState, {
+                    name: "untitled.txt",
+                    content: "",
+                    location: directory(),
+                })}>
                 <FaNoteSticky size={30} color={'yellow'}/>
             </div>
-            <div className={'border p-3 cursor-pointer'}
-                 onClick={() => setOpenedWindows(
-                     [...openedWindows,
-                         <Settings
-                             windowIndex={openedWindows.length}
-                             openedWindows={openedWindows}
-                             setOpenedWindows={setOpenedWindows}
-                         />])
-                 }>
-                Settings
+            <div
+                className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300 
+                rounded-md ${settings ? 'bg-gray-700 ' : ''}`}
+                onClick={() => OpenSettings({
+                    openedWindows,
+                    setOpenedWindows,
+                }, settings, setAppOpenedState)}>
+                <FaGear size={30} color={'yellow'}/>
             </div>
-            <div className={'border p-3 cursor-pointer'}
-                 onClick={() => setOpenedWindows(
-                     [...openedWindows,
-                         <Camera
-                             windowIndex={openedWindows.length}
-                             openedWindows={openedWindows}
-                             setOpenedWindows={setOpenedWindows}
-                         />])
-                 }>
-                Camera
+            <div
+                className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300 
+                rounded-md ${camera ? 'bg-gray-700 ' : ''}`}
+                onClick={() => OpenCamera({
+                    openedWindows,
+                    setOpenedWindows,
+                }, camera, setAppOpenedState)}>
+                <FaCamera size={30} color={'yellow'}/>
             </div>
-            <div className={'border p-3 cursor-pointer'}
-                 onClick={() => setOpenedWindows(
-                     [...openedWindows,
-                         <FileManager
-                             windowIndex={openedWindows.length}
-                             openedWindows={openedWindows}
-                             setOpenedWindows={setOpenedWindows}
-                             appOpenedState={appOpenedState}
-                         />])
-                 }>
-                File Manager
+            <div
+                className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300
+                rounded-md ${fileManager ? 'bg-gray-700 ' : ''}`}
+                onClick={() => OpenFileManager({
+                    openedWindows,
+                    setOpenedWindows,
+                }, fileManager, setAppOpenedState)}>
+                <FaFolder size={30} color={'yellow'}/>
             </div>
         </div>
     );
