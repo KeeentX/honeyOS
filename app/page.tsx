@@ -1,30 +1,41 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import useFont from "@/hooks/useFont";
+import { SpeechRecognitionContext } from "./context/speechRecognitionContext";
 
 export default function Home() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstTimeLogin, setFirstTimeLogin] = useState(true);
+  const { montserrat } = useFont();
+  const [loginCommandEntered, setLoginCommandEntered] = useState(false);
+  const {command} = useContext(SpeechRecognitionContext);
   
   const router = useRouter();
 
-  const isInputFilled = (value: string) => {
-    return value.trim() !== "";
-  };
+  const handleLoginClick = () => {
+    setLoginCommandEntered(true);
+  }
 
   useEffect(() => {
-    if (isInputFilled(username) && isInputFilled(password)) {
-        // setFirstTimeLogin(false);
+    // const commandWithoutComma = command.replace(",", "");
+    console.log("command: ", command);
+    if(command === "good day honey" || command === "good morning honey" || command === "good afternoon honey") {
+      console.log('set to true');
+      setLoginCommandEntered(true);
     }
-    
-  }, [username, password, router]);
+  }, [command]);
+
+  useEffect(() => {
+    if (loginCommandEntered === true){
+      setTimeout(() => {
+        router.push("/desktop");
+      }, 2000);
+    }
+  }, [loginCommandEntered]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-purple-900 relative">
+    <div className={`${montserrat.className} min-h-screen flex items-center justify-center bg-purple-900 relative`}>
       <Image
         src="/loginbackground.jpg"
         alt="Login background"
@@ -33,7 +44,7 @@ export default function Home() {
         quality={100}
       />
 
-      <div className="bg-white bg-opacity-70 p-8 rounded-lg shadow-lg relative">
+      <div className="bg-white min-w-[360px] min-h-[300px] bg-opacity-70 p-8 rounded-lg shadow-lg relative items-center justify-center flex flex-col">
         <div className="relative inset-0 flex items-center justify-center p-2">
           <Image
             src="/usericon.png"
@@ -43,100 +54,21 @@ export default function Home() {
           />
         </div>
 
-        {firstTimeLogin ? (
-          <>
-            <div className="mb-4 relative flex items-center">
-              <input
-                type="text"
-                placeholder="Set Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full border-2 border-purple-500 rounded-md py-2 px-4 focus:outline-none focus:border-purple-600"
-              />
-              {!isInputFilled(username) && (
-                <div className="absolute -right-6">
-                  <Image
-                    src="/bee.png"
-                    alt="Bee"
-                    width={40}
-                    height={40}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="mb-4 relative flex items-center">
-              <input
-                type="password"
-                placeholder="Set Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border-2 border-purple-500 rounded-md py-2 px-4 focus:outline-none focus:border-purple-600"
-              />
-              {!isInputFilled(password) && (
-                <div className="absolute -right-6">
-                  <Image
-                    src="/bee.png"
-                    alt="Bee"
-                    width={40}
-                    height={40}
-                  />
-                </div>
-              )}
-            </div>
-          </>
+        <div className="text-black flex items-center justify-center">
+        {!loginCommandEntered ? (
+          <div className="text-center">
+            <p className="mb-4">Say "Good day, honey" to login</p>
+            <button className="text-black bg-slate-500 justify-center px-3 py-2 rounded-md hover:cursor-pointer hover:bg-slate-600" onClick={handleLoginClick}>Log in</button>
+          </div>
         ) : (
-          <div className="mb-4 relative flex items-center">
-            <input
-              type="password"
-              placeholder="Enter Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border-2 border-purple-500 rounded-md py-2 px-4 focus:outline-none focus:border-purple-600"
-            />
-
-            {!isInputFilled(password) && (
-                <div className="absolute -right-6">
-                  <Image
-                    src="/bee.png"
-                    alt="Bee"
-                    width={40}
-                    height={40}
-                  />
-                </div>
-              )}
+          <div className="text-center text-[25px]">
+            <p>Welcome, honey!</p>
+            <div className="flex items-center justify-center">
+              <Image src="/loading.gif" alt="Loading" width={100} height={100} />
+            </div>
           </div>
         )}
-
-        <Link href={isInputFilled(username) && isInputFilled(password) ? "/desktop" : "#"}>
-          <div className="relative inset-0 flex items-center justify-center text-center cursor-pointer">
-            <div className="text-center cursor-pointer relative">
-              {isInputFilled(username) && isInputFilled(password) ? (
-                <>
-                  <Image
-                    src="/bee.png"
-                    alt="Bee"
-                    width={40}
-                    height={40}
-                    className="absolute"
-                  />
-                  <Image
-                    src="/flower.png"
-                    alt="Flower Image"
-                    width={50}
-                    height={50}
-                  />
-                </>
-              ) : (
-                <Image
-                  src="/flower.png"
-                  alt="Flower Image"
-                  width={50}
-                  height={50}
-                />
-              )}
-            </div>
-          </div>
-        </Link>
+        </div>
       </div>
     </div>
   );
