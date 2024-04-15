@@ -6,23 +6,23 @@ type CancelHandler = () => void;
 interface NewFilePopupProps {
   onSave: SaveHandler;
   onCancel: CancelHandler;
-  fileType?: string; // Added fileType prop
+  fileType?: string;
+  name: string;
+  setName: (name: string) => void;
 }
 
-export default function NewFilePopup({ onSave, onCancel, fileType }: NewFilePopupProps) {
-  const [name, setName] = useState("");
-  const [selectedFileType, setSelectedFileType] = useState(fileType || ""); // Initialize with fileType if provided
-
+export default function NewFilePopup({ onSave, onCancel, fileType, setName, name }: NewFilePopupProps) {
+  const [extension, setExtension] = useState(".txt"); // Initialize with fileType if provided
 
   const handleSave = () => {
-    const fileName = selectedFileType === "folder" ? name : (selectedFileType === "file" ? `${name}.txt` : `${name}${selectedFileType}`);
+    const fileName = fileType === "folder" ? name : `${name}${extension}`;
     onSave(fileName);
     setName("");
-    setSelectedFileType(""); // Reset selectedFileType after saving
+    setExtension(""); // Reset selectedFileType after saving
   };
 
   const setFileType = (value: string) => {
-    setSelectedFileType(value);
+    setExtension(value);
   };
 
   return (
@@ -42,8 +42,8 @@ export default function NewFilePopup({ onSave, onCancel, fileType }: NewFilePopu
               {/* Removed value={fileType} */}
               <select onChange={(e) => setFileType(e.target.value)} className="border p-2 bg-inherit">
                 <option value=".txt">.txt(Text File)</option>
-                <option value=".png">.png(PNG Image)</option>
-                <option value=".jpg">.jpg(JPEG Image)</option>
+                {/*<option value=".png">.png(PNG Image)</option>*/}
+                {/*<option value=".jpg">.jpg(JPEG Image)</option>*/}
               </select>
             </label>
           </div>
