@@ -15,7 +15,8 @@ export default function NewFilePopup({ onSave, onCancel, fileType, setName, name
   const [extension, setExtension] = useState(".txt"); // Initialize with fileType if provided
 
   const handleSave = () => {
-    const fileName = fileType === "folder" ? name : `${name}${extension}`;
+    const fileName = fileType === "folder" ? name : `${name}`;
+    console.log("Saving file: ", fileName);
     onSave(fileName);
     setName("");
     setExtension(""); // Reset selectedFileType after saving
@@ -27,7 +28,7 @@ export default function NewFilePopup({ onSave, onCancel, fileType, setName, name
 
   return (
     <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
-      <div className="bg-white p-4 rounded">
+      <div className="bg-primary p-4 rounded">
         <input
           type="text"
           value={name}

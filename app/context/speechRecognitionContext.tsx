@@ -6,21 +6,22 @@ import {listen} from "@tauri-apps/api/event";
 type SpeechRecognitionContextProps = {
     command: string,
     speak: (text: string) => void,
+    voices: SpeechSynthesisVoice[] | null,
     payload: string,
     audioContextRef: React.MutableRefObject<AudioContext | null>,
 }
 export const SpeechRecognitionContext = createContext<SpeechRecognitionContextProps>({
     command: "",
     speak: () => {},
+    voices: [],
     payload: '',
     audioContextRef: {current: null}
 });
 export default function SpeechRecognitionProvider({children}: {children: React.ReactNode}) {
     const [command, setCommand] = useState("");
-    const voices = useRef<SpeechSynthesisVoice[]>([]);
     const [payload, setPayload] = useState<string>('');
     const audioContextRef = useRef<AudioContext | null>(null);
-
+    const [voices, setVoice] = useState<SpeechSynthesisVoice[] | null>(null);
     useEffect(() => {
         // TRANSCRIPTION
         const unlisten = listen<string>('transcribed_text', (event) => {
@@ -34,7 +35,7 @@ export default function SpeechRecognitionProvider({children}: {children: React.R
         const voiceTimer = setInterval(() => {
             const availableVoices = window.speechSynthesis.getVoices();
             if (availableVoices.length !== 0) {
-                voices.current = availableVoices;
+                setVoice(availableVoices);
                 clearInterval(voiceTimer);
             }
         }, 200);
@@ -47,10 +48,11 @@ export default function SpeechRecognitionProvider({children}: {children: React.R
     }, []);
 
     function speak(text: string) {
-        if(voices.current.length !== 0){
+        if(voices?.length !== 0){
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.voice = voices.current[2];
-            console.log(voices);
+            if (voices) {
+                utterance.voice = voices[2];
+            }
             window.speechSynthesis.speak(utterance);
         }
     }
@@ -68,10 +70,14 @@ export default function SpeechRecognitionProvider({children}: {children: React.R
             }
             if(command === "open file manager") return [true, "open file_manager"];
             if(command === "focus file manager") return [true, "focus file_manager"];
+            if(command === "minimize file manager") return [true, "minimize file_manager"];
+            if(command === "maximize file manager") return [true, "maximize file_manager"];
+            if(command === "restore file manager") return [true, "restore file_manager"];
+            if(command === "close file manager") return [true, "close file_manager"];
             return [true, command];
         }
         return [false, ''];
     }
 
-    return <SpeechRecognitionContext.Provider value={{command, speak, payload, audioContextRef}}>{children}</SpeechRecognitionContext.Provider>
+    return <SpeechRecognitionContext.Provider value={{command, speak, payload, audioContextRef, voices}}>{children}</SpeechRecognitionContext.Provider>
 }

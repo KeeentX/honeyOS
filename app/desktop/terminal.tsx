@@ -1,30 +1,32 @@
 import React, {useState, useRef, useEffect, useContext} from "react";
 import { invoke } from '@tauri-apps/api/tauri';
-import { listen } from '@tauri-apps/api/event';
 import useFileSystem from "@/hooks/useFileSystem";
-import {OpenCamera, OpenFileManager, OpenNote, OpenSettings, SetFocus} from "@/app/desktop/programOpener";
-import {OpenAppsContext} from "@/app/context/openedAppsContext";
+import {
+    closeWindow,
+    maximizeWindow,
+    minimizeWindow,
+    OpenCamera,
+    OpenFileManager,
+    OpenNote,
+    OpenSettings, restoreWindow,
+    SetFocus
+} from "@/app/desktop/programOpener";
 import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
 import {SpeechRecognitionContext} from "@/app/context/speechRecognitionContext";
 
+const Programs = {
+    NOTE: 0,
+    SETTINGS: 1,
+    CAMERA: 2,
+    FILE_MANAGER: 3,
+}
+
 export default function Terminal() {
     const {directory, setHoneyDirectory, honey_directory, exitCurrentDir, listDir, makeDir, createFile, readFile} = useFileSystem();
-    // const [modifiedDirectory, setModifiedDirectory] = useState(directory.replace("C:\\honey\\root", "C:\\"));
     const inputRef = useRef<HTMLInputElement>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
     const [oldText, setOldText] = useState("");
     const hasRunOnceRef = useRef(false);
-    const {
-        note,
-        isNoteFocused,
-        settings,
-        isSettingsFocused,
-        fileManager,
-        isFileManagerFocused,
-        camera,
-        isCameraFocused,
-        setAppOpenedState
-    } = useContext(OpenAppsContext);
     const {openedWindows, setOpenedWindows} = useContext(OpenedWindowsContext);
     const {command, speak} = useContext(SpeechRecognitionContext);
     useEffect(() => {
@@ -45,9 +47,20 @@ export default function Terminal() {
     }, []);
 
     useEffect(() => {
-        if(!(isNoteFocused || isSettingsFocused || isCameraFocused || isFileManagerFocused) || command.includes("focus") || command.includes("open")) {
+        if(!(
+            openedWindows[0].focused ||
+            openedWindows[1].focused ||
+            openedWindows[2].focused ||
+            openedWindows[3].focused) ||
+            command.includes("focus") ||
+            command.includes("open") ||
+            command.includes("minimize") ||
+            command.includes("maximize") ||
+            command.includes("close") ||
+            command.includes("restore") ||
+            command.includes("focus")) {
             command.length && appendToTerminal((honey_directory().length ? 'honey_os\\' : 'honey_os') + honey_directory()+'>'+command);
-            if(!(command.includes("open") && isFileManagerFocused)) executeCommand(command).then(r => console.log(r));
+            if(!(command.includes("open") && openedWindows[3].focused)) executeCommand(command).then(r => console.log(r));
         }
     }, [command]);
 
@@ -100,7 +113,7 @@ export default function Terminal() {
 
             appendToTerminal(asciiArt);
             const speechText = `JOI, OS: Honey x86_64 CPU: ${cpu_name}, Speed: ${cpu_speed} MHz, Disk: ${diskInGB} GB, RAM: ${ramInGB} GB`;
-            speak(speechText);
+            // speak(speechText);
         } catch (error) {
             console.error('Failed to fetch system info:', error);
         }
@@ -111,10 +124,10 @@ export default function Terminal() {
         - Lists the files in the current directory
     */
     async function listCurrentDirectory() {
-        console.log('Directory:', directory() + honey_directory());
         try {
             appendToTerminal(`\nDirectory of ${(honey_directory().length ? 'honeyos\\' : 'honeyos') + honey_directory()}\n`);
             const files2 = await listDir();
+            speak("Listing files in the current directory.");
             files2.map(file => {
                 appendToTerminal(`${file.mtime}\t\t${file.size}\t\t${file.name}`);
             })
@@ -182,7 +195,7 @@ export default function Terminal() {
                 OpenNote({
                     openedWindows,
                     setOpenedWindows,
-                }, note, setAppOpenedState, {
+                }, {
                     name: "untitled.txt",
                     content: "",
                     location: directory() + '\\',
@@ -192,19 +205,19 @@ export default function Terminal() {
                 OpenSettings({
                     openedWindows,
                     setOpenedWindows,
-                }, settings, setAppOpenedState)
+                })
                 break;
             case "camera":
                 OpenCamera({
                     openedWindows,
                     setOpenedWindows,
-                }, camera, setAppOpenedState);
+                });
                 break;
             case "file_manager":
                 OpenFileManager({
                     openedWindows,
                     setOpenedWindows,
-                }, fileManager, setAppOpenedState);
+                });
                 break;
         }
     }
@@ -315,13 +328,55 @@ export default function Terminal() {
                 }
                 break;
 
+            case "minimize":
+                if(commandParts.length < 2) appendToTerminal("minimize: too few arguments");
+                else if (commandParts.length > 2) appendToTerminal("minimize: too many arguments");
+                else minimizeWindow(openedWindows, setOpenedWindows, Programs[commandParts[1].toUpperCase() as keyof typeof Programs])
+                break;
+
+            case "maximize":
+                if(commandParts.length < 2) appendToTerminal("minimize: too few arguments");
+                else if (commandParts.length > 2) appendToTerminal("minimize: too many arguments");
+                else maximizeWindow(openedWindows, setOpenedWindows, Programs[commandParts[1].toUpperCase() as keyof typeof Programs])
+                break;
+
+            case "close":
+                if(commandParts.length < 2) appendToTerminal("minimize: too few arguments");
+                else if (commandParts.length > 2) appendToTerminal("minimize: too many arguments");
+                else
+                    if (commandParts[1].toUpperCase() !== "NOTE")
+                        closeWindow(openedWindows, setOpenedWindows, Programs[commandParts[1].toUpperCase() as keyof typeof Programs]);
+                break;
+
+            case "restore":
+                if(commandParts.length < 2) appendToTerminal("minimize: too few arguments");
+                else if (commandParts.length > 2) appendToTerminal("minimize: too many arguments");
+                else restoreWindow(openedWindows, setOpenedWindows, Programs[commandParts[1].toUpperCase() as keyof typeof Programs])
+                break;
+
             case "focus":
                 if(commandParts.length < 2){
                     appendToTerminal("open: too few arguments");
                 }else if (commandParts.length > 2){
                     appendToTerminal("open: too many arguments");
                 } else{
-                    SetFocus(commandParts[1], setAppOpenedState);
+                    switch(commandParts[1]){
+                        case "note":
+                            SetFocus(0, setOpenedWindows);
+                            break;
+                        case "settings":
+                            SetFocus(1, setOpenedWindows);
+                            break;
+                        case "camera":
+                            SetFocus(2, setOpenedWindows);
+                            break;
+                        case "file_manager":
+                            SetFocus(3, setOpenedWindows);
+                            break;
+                        default:
+                            SetFocus(-1, setOpenedWindows);
+
+                    }
                 }
                 break;
             default:
@@ -335,8 +390,6 @@ export default function Terminal() {
                         }else{
                             OpenNote(
                                 {openedWindows, setOpenedWindows},
-                                0,
-                                setAppOpenedState,
                                 {
                                     content: (await readFile(matchingFile.name)).content,
                                     location: directory() + '\\' + honey_directory(),
