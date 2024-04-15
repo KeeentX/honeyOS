@@ -6,6 +6,7 @@ import {listen} from "@tauri-apps/api/event";
 type SpeechRecognitionContextProps = {
     command: string,
     speak: (text: string) => void,
+    setCommand: (command: string) => void,
     voices: SpeechSynthesisVoice[] | null,
     payload: string,
     audioContextRef: React.MutableRefObject<AudioContext | null>,
@@ -13,6 +14,7 @@ type SpeechRecognitionContextProps = {
 export const SpeechRecognitionContext = createContext<SpeechRecognitionContextProps>({
     command: "",
     speak: () => {},
+    setCommand: () => {},
     voices: [],
     payload: '',
     audioContextRef: {current: null}
@@ -79,5 +81,5 @@ export default function SpeechRecognitionProvider({children}: {children: React.R
         return [false, ''];
     }
 
-    return <SpeechRecognitionContext.Provider value={{command, speak, payload, audioContextRef, voices}}>{children}</SpeechRecognitionContext.Provider>
+    return <SpeechRecognitionContext.Provider value={{command, speak, payload, audioContextRef, voices, setCommand}}>{children}</SpeechRecognitionContext.Provider>
 }

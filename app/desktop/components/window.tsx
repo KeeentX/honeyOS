@@ -53,7 +53,7 @@ export default function WindowScreen({ name, children, icon, windowIndex, custom
   };
 
   const closeThisWindow = () => {
-    onClose && onClose() &&
+    if(onClose && !onClose()) return;
     setOpenedWindows(prevState => {
         prevState[windowIndex].html = null;
         prevState[windowIndex].focused = false;

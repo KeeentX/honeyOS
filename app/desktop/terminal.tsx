@@ -28,7 +28,7 @@ export default function Terminal() {
     const [oldText, setOldText] = useState("");
     const hasRunOnceRef = useRef(false);
     const {openedWindows, setOpenedWindows} = useContext(OpenedWindowsContext);
-    const {command, speak} = useContext(SpeechRecognitionContext);
+    const {command, speak, setCommand} = useContext(SpeechRecognitionContext);
     useEffect(() => {
         if (!hasRunOnceRef.current) {
             hasRunOnceRef.current = true;
@@ -60,7 +60,8 @@ export default function Terminal() {
             command.includes("restore") ||
             command.includes("focus")) {
             command.length && appendToTerminal((honey_directory().length ? 'honey_os\\' : 'honey_os') + honey_directory()+'>'+command);
-            if(!(command.includes("open") && openedWindows[3].focused)) executeCommand(command).then(r => console.log(r));
+
+            if(!((command.includes("open") || command.includes("cancel") || command.includes("confirm")) && openedWindows[3].focused)) executeCommand(command).then(r => console.log(r));
         }
     }, [command]);
 
@@ -205,7 +206,7 @@ export default function Terminal() {
                 OpenSettings({
                     openedWindows,
                     setOpenedWindows,
-                })
+                }, speak);
                 break;
             case "camera":
                 OpenCamera({
@@ -254,6 +255,7 @@ export default function Terminal() {
                 // appendToTerminal(`${modifiedDirectory}${'>'}${userInput}`);
                 (inputRef.current as HTMLSpanElement).innerText = ""; // Clear the input
                 moveCursorToEnd(); // Move the cursor to the end
+                if(userInput.toLowerCase().includes('close note')) setCommand(userInput);
                 executeCommand(userInput);
             }
         }
@@ -343,9 +345,10 @@ export default function Terminal() {
             case "close":
                 if(commandParts.length < 2) appendToTerminal("minimize: too few arguments");
                 else if (commandParts.length > 2) appendToTerminal("minimize: too many arguments");
-                else
+                else {
                     if (commandParts[1].toUpperCase() !== "NOTE")
                         closeWindow(openedWindows, setOpenedWindows, Programs[commandParts[1].toUpperCase() as keyof typeof Programs]);
+                }
                 break;
 
             case "restore":

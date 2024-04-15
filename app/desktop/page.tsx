@@ -5,7 +5,7 @@ import Terminal from "./terminal";
 import Manager from "./manager";
 import Voice from "./voice";
 import Taskbar from "./taskbar";
-import React, {useContext, useEffect, useState} from "react";
+import React, {useContext, useEffect} from "react";
 import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
 
 export default function Desktop() {
