@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { DirectoryProvider } from "./directoryContext";
+import OpenedAppsProvider from "@/app/context/openedAppsContext";
+import React from "react";
+import OpenedWindowsProvider from "@/app/context/openedWindowsContext";
+import SpeechRecognitionProvider, {SpeechRecognitionContext} from "@/app/context/speechRecognitionContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,9 +22,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="overflow-hidden">
       <body className={inter.className}>
+      <SpeechRecognitionProvider>
+      <OpenedWindowsProvider>
+      <OpenedAppsProvider>
         <DirectoryProvider>
           {children}
         </DirectoryProvider>
+      </OpenedAppsProvider>
+      </OpenedWindowsProvider>
+      </SpeechRecognitionProvider>
       </body>
     </html>
   );
