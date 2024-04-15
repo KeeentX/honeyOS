@@ -1,7 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {OpenCamera, OpenFileManager, OpenNote, OpenSettings} from "@/app/desktop/programOpener";
 import {FaGear, FaNoteSticky} from "react-icons/fa6";
-import {OpenAppsContext} from "@/app/context/openedAppsContext";
 import {FaCamera, FaFolder} from "react-icons/fa";
 import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
 import useFileSystem from "@/hooks/useFileSystem";
@@ -9,7 +8,6 @@ import useFileSystem from "@/hooks/useFileSystem";
 export default function Taskbar() {
     const [currentTime, setCurrentTime] = useState('');
     const [currentDate, setCurrentDate] = useState('');
-    const {note, camera, settings, fileManager, setAppOpenedState} = useContext(OpenAppsContext);
     const {openedWindows, setOpenedWindows} = useContext(OpenedWindowsContext);
     const {directory, honey_directory} = useFileSystem();
     // Update the current date and time every second
@@ -33,12 +31,12 @@ export default function Taskbar() {
             </div>
             <div
                 className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300 
-                rounded-md ${note ? 'bg-gray-700 ' : ''}
+                rounded-md ${openedWindows[0].html ? 'bg-gray-700 ' : ''}
                 `}
                 onClick={() => OpenNote({
                     openedWindows,
                     setOpenedWindows,
-                }, note, setAppOpenedState, {
+                }, {
                     name: "untitled.txt",
                     content: "",
                     location: directory(),
@@ -47,29 +45,29 @@ export default function Taskbar() {
             </div>
             <div
                 className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300 
-                rounded-md ${settings ? 'bg-gray-700 ' : ''}`}
+                rounded-md ${openedWindows[1].html ? 'bg-gray-700 ' : ''}`}
                 onClick={() => OpenSettings({
                     openedWindows,
                     setOpenedWindows,
-                }, settings, setAppOpenedState)}>
+                })}>
                 <FaGear size={30} color={'yellow'}/>
             </div>
             <div
                 className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300 
-                rounded-md ${camera ? 'bg-gray-700 ' : ''}`}
+                rounded-md ${openedWindows[2].html ? 'bg-gray-700 ' : ''}`}
                 onClick={() => OpenCamera({
                     openedWindows,
                     setOpenedWindows,
-                }, camera, setAppOpenedState)}>
+                })}>
                 <FaCamera size={30} color={'yellow'}/>
             </div>
             <div
                 className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300
-                rounded-md ${fileManager ? 'bg-gray-700 ' : ''}`}
+                rounded-md ${openedWindows[3].html ? 'bg-gray-700 ' : ''}`}
                 onClick={() => OpenFileManager({
                     openedWindows,
                     setOpenedWindows,
-                }, fileManager, setAppOpenedState)}>
+                })}>
                 <FaFolder size={30} color={'yellow'}/>
             </div>
         </div>
