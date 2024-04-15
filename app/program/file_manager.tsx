@@ -4,9 +4,8 @@ import useFileSystem from "@/hooks/useFileSystem";
 import NewFilePopup from "../desktop/components/file_manager_popup";
 import {HoneyFile, WindowProps} from "@/app/types";
 import {FaFolder, FaFolderPlus} from "react-icons/fa";
-import { DocumentTextIcon, EllipsisVerticalIcon, FolderIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid";
+import {DocumentTextIcon, EllipsisVerticalIcon, FolderIcon, PhotoIcon, TrashIcon } from "@heroicons/react/16/solid";
 import {OpenNote} from "@/app/desktop/programOpener";
-import {OpenAppsContext} from "@/app/context/openedAppsContext";
 import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
 import useFont from "@/hooks/useFont";
 import {FaFileCirclePlus} from "react-icons/fa6";
@@ -16,10 +15,7 @@ export default function FileManager({windowIndex}: WindowProps) {
     const {listDir, honey_directory, setHoneyDirectory, exitCurrentDir, makeDir, deleteDir, deleteFile, createFile, directory, absolutePath, dataDirPath, readFile} = useFileSystem();
     const [showPopup, setShowPopup] = useState(false); // State to control popup visibility
     const [popupType, setPopupType] = useState(""); // State to track the type of popup ("file" or "folder")
-    const [popupPath, setPopupPath] = useState(""); // State to track the path for creating the file or folder
-    const [showOptionsDropdown, setShowOptionsDropdown] = useState(false); // State to control options dropdown visibility
     const [showOptionsDropdownForFile, setShowOptionsDropdownForFile] = useState<number | null>(null); // State to track which file's options dropdown is open
-    const {setAppOpenedState, isFileManagerFocused} = useContext(OpenAppsContext);
     const {setOpenedWindows, openedWindows} = useContext(OpenedWindowsContext);
     const {command} = useContext(SpeechRecognitionContext)
     const [name, setName] = useState("");
@@ -36,7 +32,7 @@ export default function FileManager({windowIndex}: WindowProps) {
     }, [dataDirPath, absolutePath]);
 
     useEffect(() => {
-        if(isFileManagerFocused) {
+        if(openedWindows[3].focused) {
             if(showPopup) {
                 if(command.substring(0, 4) == "type") {
                     setName(command.substring(5));
@@ -67,12 +63,10 @@ export default function FileManager({windowIndex}: WindowProps) {
                         if(data.status) {
                             OpenNote(
                                 {openedWindows, setOpenedWindows},
-                                0,
-                                setAppOpenedState,
                                 {
                                     name: command,
                                     content: data.content,
-                                    location: directory() + "\\" + honey_directory()
+                                    location: directory() + "\\" +   honey_directory()
                                 }
                             )
                         }
@@ -145,7 +139,7 @@ export default function FileManager({windowIndex}: WindowProps) {
         <WindowScreen name={'File Manager'}
                       windowIndex={windowIndex}
                       icon={<FaFolder size={25} color={'yellow'}/>}>
-            <div className={`${montserrat.className} p-4 flex flex-col text-black relative h-full`}>
+            <div className={`${montserrat.className} p-4 flex flex-col text-yellow-100 relative h-full bg-primary rounded-lg`}>
                 <div className="flex items-center space-x-2">
                     <button onClick={exitCurrentDir} className={'text-sm'}>...</button>
                     <div className="overflow-x-auto whitespace-nowrap">{honey_directory()}</div>
@@ -169,8 +163,6 @@ export default function FileManager({windowIndex}: WindowProps) {
                                      } : async () => {
                                          OpenNote(
                                              {openedWindows, setOpenedWindows},
-                                             0,
-                                             setAppOpenedState,
                                              {
                                                  name: file.name,
                                                  content: (await readFile(file.name)).content,
@@ -199,10 +191,10 @@ export default function FileManager({windowIndex}: WindowProps) {
                                         </button>
                                         {/* Delete option */}
                                         {showOptionsDropdownForFile === index && (
-                                            <div className="absolute right-0 mt-2 w-36 bg-white shadow-md rounded-lg z-10">
+                                            <div className="absolute right-0 mt-2 w-36 bg-primary shadow-md rounded-lg z-10">
                                                 {/* Delete option */}
                                                 <button
-                                                    className="flex border w-full px-4 py-2 space-x-2 items-center hover:bg-gray-200 focus:outline-none"
+                                                    className="flex border w-full px-4 py-2 space-x-2 items-center hover:bg-gray-200 hover:text-primary focus:outline-none"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         // Pass the file name and type (file or directory) to the delete function
