@@ -1,4 +1,5 @@
 import React, {Dispatch} from "react";
+import {Window} from "@/app/context/openedWindowsContext";
 
 export type FileProps = {
     name: string,
@@ -8,21 +9,16 @@ export type FileProps = {
 }
 
 export type OpenedWindowsProps = {
-    openedWindows: React.JSX.Element[],
-    setOpenedWindows: Dispatch<React.JSX.Element[]>
-
+    openedWindows: Window[],
+    setOpenedWindows: Dispatch<React.SetStateAction<Window[]>>
 }
 export type WindowProps = {
     name?: string,
     customName?: string,
     children?: React.ReactNode,
     icon?: React.JSX.Element,
-    windowIndex?: number,
-    file?: {
-        content: string,
-        location: string
-        name: string,
-    }
+    onClose?: () => boolean,
+    windowIndex: number,
 }
 
 export type HoneyFile = {
@@ -31,3 +27,4 @@ export type HoneyFile = {
     size: string,
     is_dir: boolean
 }
+
