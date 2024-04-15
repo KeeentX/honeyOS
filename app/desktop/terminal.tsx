@@ -1,46 +1,37 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, {useState, useRef, useEffect, useContext} from "react";
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
 import useFileSystem from "@/hooks/useFileSystem";
-import {FileProps, WindowProps} from "@/app/types";
-import Note from "@/app/program/note";
-import Settings from "@/app/program/settings";
-import Camera from "@/app/program/camera";
-import FileManager from "@/app/program/file_manager";
-import {OpenNote} from "@/app/desktop/programOpener";
+import {OpenCamera, OpenFileManager, OpenNote, OpenSettings, SetFocus} from "@/app/desktop/programOpener";
+import {OpenAppsContext} from "@/app/context/openedAppsContext";
+import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
+import {SpeechRecognitionContext} from "@/app/context/speechRecognitionContext";
 
-export default function Terminal({setOpenedWindows, openedWindows, appOpenedState}: WindowProps) {
-    const {directory, setHoneyDirectory, honey_directory, exitCurrentDir, listDir} = useFileSystem();
+export default function Terminal() {
+    const {directory, setHoneyDirectory, honey_directory, exitCurrentDir, listDir, makeDir, createFile, readFile} = useFileSystem();
     // const [modifiedDirectory, setModifiedDirectory] = useState(directory.replace("C:\\honey\\root", "C:\\"));
     const inputRef = useRef<HTMLInputElement>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
     const [oldText, setOldText] = useState("");
     const hasRunOnceRef = useRef(false);
-    const voices = useRef<SpeechSynthesisVoice[]>([]);
-
+    const {
+        note,
+        isNoteFocused,
+        settings,
+        isSettingsFocused,
+        fileManager,
+        isFileManagerFocused,
+        camera,
+        isCameraFocused,
+        setAppOpenedState
+    } = useContext(OpenAppsContext);
+    const {openedWindows, setOpenedWindows} = useContext(OpenedWindowsContext);
+    const {command, speak} = useContext(SpeechRecognitionContext);
     useEffect(() => {
         if (!hasRunOnceRef.current) {
             hasRunOnceRef.current = true;
             appendSystemInfoToTerminal();
         }
-
-        // Fetch voices
-        const voiceTimer = setInterval(() => {
-            const availableVoices = window.speechSynthesis.getVoices();
-            if (availableVoices.length !== 0) {
-                voices.current = availableVoices;
-                clearInterval(voiceTimer);
-            }
-        }, 200);
-
-        // TRANSCRIPTION
-        const unlisten = listen<string>('transcribed_text', (event) => {
-            const [isCommandValid, command] = isCommand(event.payload);
-            if(isCommandValid){
-                appendToTerminal(`${'honeyos' + honey_directory()}${'>'}${command}`);
-                executeCommand(command);
-            }
-        });
 
         if (terminalRef.current) {
             (terminalRef.current as HTMLElement).addEventListener("click", focusInput);
@@ -53,27 +44,22 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
         };
     }, []);
 
-    function isCommand(transcript: string): [boolean, string] {
-        const trimmedTranscript = transcript.trim().toLowerCase().replace(/[^\w\s]/gi, '');
-        const startsWithHoney = trimmedTranscript.startsWith('honey');
-        const endsWithPlease = trimmedTranscript.endsWith('please');
-    
-        if (startsWithHoney && endsWithPlease) {
-            const command = trimmedTranscript.slice(5, -6).trim();
-            if(command === "open file manager") return [true, "open file_manager"];
-            return [true, command];
+    useEffect(() => {
+        if(!(isNoteFocused || isSettingsFocused || isCameraFocused || isFileManagerFocused) || command.includes("focus") || command.includes("open")) {
+            command.length && appendToTerminal((honey_directory().length ? 'honey_os\\' : 'honey_os') + honey_directory()+'>'+command);
+            if(!(command.includes("open") && isFileManagerFocused)) executeCommand(command).then(r => console.log(r));
         }
-        return [false, ''];
-    }
+    }, [command]);
 
-    function speak(text: string) {
-        if(voices.current.length !== 0){
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.voice = voices.current[2];
-            console.log(voices);
-            window.speechSynthesis.speak(utterance);
-        }  
-    }
+    useEffect(() => {
+        // Get a reference to the terminal output div
+        const terminalOutputDiv = document.getElementById('terminal');
+
+        // Scroll the div to the bottom
+        if (terminalOutputDiv) {
+            terminalOutputDiv.scrollTo(0, terminalOutputDiv.scrollHeight);
+        }
+    }, [oldText]); // Run this effect whenever oldText changes
 
     /*------------------------------------------------------------------------------------------------------------*/
     // TERMINAL FUNCTIONS
@@ -125,11 +111,12 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
         - Lists the files in the current directory
     */
     async function listCurrentDirectory() {
+        console.log('Directory:', directory() + honey_directory());
         try {
             appendToTerminal(`\nDirectory of ${(honey_directory().length ? 'honeyos\\' : 'honeyos') + honey_directory()}\n`);
             const files2 = await listDir();
             files2.map(file => {
-                appendToTerminal(`${file.mtime}    ${file.size}    ${file.name}`);
+                appendToTerminal(`${file.mtime}\t\t${file.size}\t\t${file.name}`);
             })
         } catch (error) {
             appendToTerminal(`Error listing directory: ${error}`);
@@ -155,6 +142,22 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
     }
 
     /*
+        CREATE [file/folder]
+        - Creates a file or folder
+     */
+
+    async function createFileOrFolder(name: string) {
+        try {
+            if(name.includes('.')) await createFile(name);
+            else await makeDir(name);
+            await listCurrentDirectory();
+        } catch (error) {
+            console.log("Error creating file or folder:", error);
+            appendToTerminal(`Error creating file or folder: ${error}`)
+        }
+    }
+
+    /*
         EXIT
         - Exits the current directory
     */
@@ -176,30 +179,33 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
     async function openProgram(program: string) {
         switch (program) {
             case "note":
-                OpenNote({appOpenedState, openedWindows, setOpenedWindows});
+                OpenNote({
+                    openedWindows,
+                    setOpenedWindows,
+                }, note, setAppOpenedState, {
+                    name: "untitled.txt",
+                    content: "",
+                    location: directory() + '\\',
+                });
                 break;
             case "settings":
-                setOpenedWindows(
-                    [...openedWindows,
-                        <Settings windowIndex={openedWindows.length} openedWindows={openedWindows} setOpenedWindows={setOpenedWindows}  />]
-                );
+                OpenSettings({
+                    openedWindows,
+                    setOpenedWindows,
+                }, settings, setAppOpenedState)
                 break;
             case "camera":
-                setOpenedWindows(
-                    [...openedWindows,
-                        <Camera windowIndex={openedWindows.length} openedWindows={openedWindows} setOpenedWindows={setOpenedWindows}  />]
-                );
+                OpenCamera({
+                    openedWindows,
+                    setOpenedWindows,
+                }, camera, setAppOpenedState);
                 break;
             case "file_manager":
-                setOpenedWindows(
-                    [...openedWindows,
-                        <FileManager
-                            windowIndex={openedWindows.length}
-                            openedWindows={openedWindows}
-                            setOpenedWindows={setOpenedWindows}
-                            appOpenedState={appOpenedState}/>]
-                );
-
+                OpenFileManager({
+                    openedWindows,
+                    setOpenedWindows,
+                }, fileManager, setAppOpenedState);
+                break;
         }
     }
     
@@ -255,12 +261,18 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
                     setOldText("");
                 }
                 break;
-            case "":
+
+            case "create":
+                if(commandParts.length < 2) appendToTerminal("create: too few arguments");
+                else if (commandParts.length > 2) appendToTerminal("create: too many arguments");
+                else await createFileOrFolder(commandParts[1]);
                 break;
+
             case "list":
                 if(commandParts.length > 1){
                     appendToTerminal("list: too many arguments");
                 }else{
+                    console.log('Listing directory')
                     await listCurrentDirectory();
                 }
 
@@ -275,42 +287,62 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
                 }
 
                 break;
+
             case "fetch":
                 if(commandParts.length > 1) {
                     appendToTerminal("fetch: too many arguments");
                 }else{
                     // appendToTerminal(asciiArt);
-                    appendSystemInfoToTerminal();
+                    await appendSystemInfoToTerminal();
                 }
                 break;
+
             case "exit":
                 if(commandParts.length > 1) {
                     appendToTerminal("exit: too many arguments");
                 }else{
-                    exitDirectory();
+                    await exitDirectory();
                 }
                 break;
+
             case "open":
                 if(commandParts.length < 2){
                     appendToTerminal("open: too few arguments");
                 }else if (commandParts.length > 2){
                     appendToTerminal("open: too many arguments");
                 }else{
-                    openProgram(commandParts[1]);
+                    await openProgram(commandParts[1]);
                 }
-                
+                break;
+
+            case "focus":
+                if(commandParts.length < 2){
+                    appendToTerminal("open: too few arguments");
+                }else if (commandParts.length > 2){
+                    appendToTerminal("open: too many arguments");
+                } else{
+                    SetFocus(commandParts[1], setAppOpenedState);
+                }
                 break;
             default:
                 // Check if the command is a file or program
-                if(commandParts.length === 1){
-                    const files: Array<{ name: string, mtime: number, size: number, is_dir: boolean }> = await invoke('list_directory_with_times', { path: directory });
+                if(commandParts.length === 1) {
+                    const files: Array<{ name: string, mtime: number, size: number, is_dir: boolean }> = await invoke('list_directory_with_times', { path: directory() + '\\' + honey_directory()});
                     const matchingFile = files.find(file => file.name === commandParts[0]);
                     if(matchingFile){
                         if(matchingFile.is_dir){
                             appendToTerminal(`'${commandParts[0]}' is not recognized as an internal or external command, operable program or file.`);
                         }else{
-                            // Open the file
-
+                            OpenNote(
+                                {openedWindows, setOpenedWindows},
+                                0,
+                                setAppOpenedState,
+                                {
+                                    content: (await readFile(matchingFile.name)).content,
+                                    location: directory() + '\\' + honey_directory(),
+                                    name: matchingFile.name,
+                                }
+                            )
                         }
                     }else{
                         appendToTerminal(`'${commandParts[0]}' is not recognized as an internal or external command, operable program or file.`);
@@ -324,8 +356,10 @@ export default function Terminal({setOpenedWindows, openedWindows, appOpenedStat
 
     return (
         <div className="text-white ml-[5vw] mt-[5vh] w-[50vw] text-sm" ref={terminalRef}>
-            <div className={` z-20 p-[2vh] mr-[5vw] break-words outline-none select-none cursor-text h-[80vh] 
-            overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-black/40 blur-none backdrop-blur-sm `}>
+            <div
+                id={"terminal"}
+                className={`z-20 p-[2vh] mr-[5vw] break-words outline-none select-none cursor-text h-[80vh]
+                overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-black/40 blur-none backdrop-blur-sm `}>
 
                 {/* DI JUD NI SYA MO WRAP ANG TEXT AMBOT NGANO*/}
                 <div className="text-green-400 whitespace-pre overflow-wrap w-[40vw] break-words break-all" >{oldText}</div>
