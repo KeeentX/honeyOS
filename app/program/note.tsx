@@ -48,7 +48,7 @@ export default function Note({windowIndex, file}: WindowProps) {
     const saveFile = async (newFileName?: string) => {
         let response : {status: boolean, message: string} = {status: false, message: ""};
         if(newFileName || currentContent.content !== newContent.content) {
-            const filename = newFileName ? newFileName : file?.name;
+            const filename = newFileName ? newFileName + ".txt" : file?.name;
             console.log('new content', newContent)
             response = await writeFile(newContent.location + '\\' + filename, newContent.content);
             if(response.status) {
@@ -155,7 +155,7 @@ export default function Note({windowIndex, file}: WindowProps) {
                         <div className={'text-sm flex flex-row h-fit space-x-1'}>
                             <div className={'bg-green-400 flex flex-row px-2 py-1 rounded-lg space-x-1'}>
                                 <FaCircleInfo size={20}/>
-                                <p>New file will be saved as {tempName}</p>
+                                <p>New file will be saved as {tempName}.txt</p>
                             </div>
                             <div className={'bg-green-400 flex flex-row px-2 py-1 rounded-lg space-x-1'}>
                                 <FaVolumeHigh size={20}/>
