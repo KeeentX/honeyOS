@@ -9,8 +9,7 @@ import React, {useContext, useEffect, useState} from "react";
 import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
 
 export default function Desktop() {
-    const {openedWindows, setOpenedWindows} = useContext(OpenedWindowsContext);
-
+    const {openedWindows, setOpenedWindows, numberOfOpenedWindows} = useContext(OpenedWindowsContext);
     useEffect(() => {
         console.log("Opened Windows: ", openedWindows)
     }, [openedWindows]);
@@ -26,8 +25,10 @@ export default function Desktop() {
                 />
             </div>
             <div className="font-consolas relative w-full h-full">
-                {openedWindows.length ? <div className={'absolute z-20 w-full h-full pointer-events-none'}>
-                    {openedWindows.map((window, index) => { return <div id={'window'+(index+1)}>{window}</div> })}
+                {numberOfOpenedWindows ? <div className={'absolute z-20 w-full h-full pointer-events-none'}>
+                    {openedWindows.map((window, index) => {
+                        return window.html && window.html
+                    })}
                 </div> : null}
                 <Taskbar/>
                 <div className="grid grid-cols-2 grid-rows-2 h-[100vh]">
