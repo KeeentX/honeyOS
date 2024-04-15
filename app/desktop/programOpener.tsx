@@ -5,6 +5,7 @@ import Settings from "@/app/program/settings"
 import FileManager from "@/app/program/file_manager";
 import Camera from "@/app/program/camera";
 import {Window} from "@/app/context/openedWindowsContext";
+
 export function OpenNote(
     {openedWindows, setOpenedWindows}: OpenedWindowsProps,
     file?: {
@@ -12,21 +13,28 @@ export function OpenNote(
         content: string,
         location: string
     }) {
-
-    if(openedWindows[0].html) toggleMinimize(openedWindows, setOpenedWindows, 0);
+    if(openedWindows[0].html) {
+        if(openedWindows[0].html?.props.file.name === file?.name) toggleMinimize(openedWindows, setOpenedWindows, 0);
+        else closeWindow(openedWindows, setOpenedWindows, 0);
+    }
     else openWindow(openedWindows, setOpenedWindows, 0, <Note windowIndex={0} file={file} />);
 }
 
-export function OpenSettings({openedWindows, setOpenedWindows}: OpenedWindowsProps) {
+export function OpenSettings({openedWindows, setOpenedWindows}: OpenedWindowsProps, speak?: (text: string) => void) {
     if(openedWindows[1].html) toggleMinimize(openedWindows, setOpenedWindows, 1)
-    else openWindow(openedWindows, setOpenedWindows, 1, <Settings windowIndex={1}/>);
+
+    else {
+        openWindow(openedWindows, setOpenedWindows, 1, <Settings windowIndex={1}/>);
+        if (speak) speak("Opening the settings window for you.")
+    }
 }
 
 export function OpenCamera({openedWindows, setOpenedWindows}: OpenedWindowsProps) {
     if(openedWindows[2].html) toggleMinimize(openedWindows, setOpenedWindows, 2)
+
     else openWindow(openedWindows, setOpenedWindows, 2, <Camera windowIndex={2}/>);
 }
-export function OpenFileManager({openedWindows, setOpenedWindows}: OpenedWindowsProps) {
+export function OpenFileManager({openedWindows, setOpenedWindows}: OpenedWindowsProps)  {
     if(openedWindows[3].html) toggleMinimize(openedWindows, setOpenedWindows, 3)
     else openWindow(openedWindows, setOpenedWindows, 3, <FileManager windowIndex={3}/>);
 }
@@ -86,7 +94,6 @@ export const closeWindow = (openedWindows: Window[], setOpenedWindows: React.Dis
         prevState[index].maximized = false;
         return [...prevState];
     })
-
 }
 
 export function SetFocus(windowIndex: number, setOpenedWindows: React.Dispatch<React.SetStateAction<Window[]>>) {
