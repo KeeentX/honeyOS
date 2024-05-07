@@ -15,11 +15,13 @@ type OpenedWindowsProps = {
     numberOfOpenedWindows: number,
     setOpenedWindows: React.Dispatch<React.SetStateAction<Window[]>>
 }
+
 export const OpenedWindowsContext = createContext<OpenedWindowsProps>({
     openedWindows: [],
     numberOfOpenedWindows: 0,
     setOpenedWindows: () => {}
 })
+
 export default function OpenedWindowsProvider({children}: {children: React.ReactNode}) {
     const [openedWindows, setOpenedWindows] = useState<Window[]>([
         {
