@@ -5,6 +5,7 @@ import { DirectoryProvider } from "./directoryContext";
 import React from "react";
 import OpenedWindowsProvider from "@/app/context/openedWindowsContext";
 import SpeechRecognitionProvider from "@/app/context/speechRecognitionContext";
+import SchedulerProvider from "./context/schedulerContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,7 +25,9 @@ export default function RootLayout({
       <SpeechRecognitionProvider>
       <OpenedWindowsProvider>
         <DirectoryProvider>
-          {children}
+          <SchedulerProvider>
+            {children}
+          </SchedulerProvider>
         </DirectoryProvider>
       </OpenedWindowsProvider>
       </SpeechRecognitionProvider>
