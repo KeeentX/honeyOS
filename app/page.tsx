@@ -27,6 +27,7 @@ export default function Home() {
   }, [payload]);
 
   useEffect(() => {
+    router.push("/desktop");
     setInterval(() => {
         setShowIntroDone(true);
     } , 15000);
