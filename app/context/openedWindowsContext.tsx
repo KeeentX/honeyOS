@@ -52,6 +52,20 @@ export default function OpenedWindowsProvider({children}: {children: React.React
             focused: false,
             name: "fileManager",
         },
+        {
+            html: null,
+            minimized: false,
+            maximized: false,
+            focused: false,
+            name: "spotify",
+        },
+        {
+            html: null,
+            minimized: false,
+            maximized: false,
+            focused: false,
+            name: "chess",
+        },
     ]);
     const [numberOfOpenedWindows, setNumberOfOpenedWindows] = useState(0);
 

@@ -1,7 +1,7 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {OpenCamera, OpenFileManager, OpenNote, OpenSettings} from "@/app/desktop/programOpener";
-import {FaGear, FaNoteSticky} from "react-icons/fa6";
-import {FaCamera, FaFolder} from "react-icons/fa";
+import {OpenCamera, OpenFileManager, OpenNote, OpenSettings, OpenSpotify, OpenChess} from "@/app/desktop/programOpener";
+import {FaGear, FaNoteSticky, FaSpotify} from "react-icons/fa6";
+import {FaCamera, FaFolder, FaChess} from "react-icons/fa";
 import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
 import useFileSystem from "@/hooks/useFileSystem";
 
@@ -69,6 +69,24 @@ export default function Taskbar() {
                     setOpenedWindows,
                 })}>
                 <FaFolder size={30} color={'yellow'}/>
+            </div>
+            <div
+                className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300
+                rounded-md ${openedWindows[4].html ? 'bg-gray-700 ' : ''}`}
+                onClick={() => OpenSpotify({
+                    openedWindows,
+                    setOpenedWindows,
+                })}>
+                <FaSpotify size={30} color={'yellow'}/>
+            </div>
+            <div
+                className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300
+                rounded-md ${openedWindows[4].html ? 'bg-gray-700 ' : ''}`}
+                onClick={() => OpenChess({
+                    openedWindows,
+                    setOpenedWindows,
+                })}>
+                <FaChess size={30} color={'yellow'}/>
             </div>
         </div>
     );

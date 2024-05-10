@@ -5,6 +5,8 @@ import Settings from "@/app/program/settings"
 import FileManager from "@/app/program/file_manager";
 import Camera from "@/app/program/camera";
 import {Window} from "@/app/context/openedWindowsContext";
+import Spotify from "@/app/program/spotify";
+import Chess from "@/app/program/chess";
 
 export function OpenNote(
     {openedWindows, setOpenedWindows}: OpenedWindowsProps,
@@ -37,6 +39,16 @@ export function OpenCamera({openedWindows, setOpenedWindows}: OpenedWindowsProps
 export function OpenFileManager({openedWindows, setOpenedWindows}: OpenedWindowsProps)  {
     if(openedWindows[3].html) toggleMinimize(openedWindows, setOpenedWindows, 3)
     else openWindow(openedWindows, setOpenedWindows, 3, <FileManager windowIndex={3}/>);
+}
+
+export function OpenSpotify({openedWindows, setOpenedWindows}: OpenedWindowsProps)  {
+    if(openedWindows[4].html) toggleMinimize(openedWindows, setOpenedWindows, 4)
+    else openWindow(openedWindows, setOpenedWindows, 4, <Spotify windowIndex={4}/>);
+}
+
+export function OpenChess({openedWindows, setOpenedWindows}: OpenedWindowsProps)  {
+    if(openedWindows[5].html) toggleMinimize(openedWindows, setOpenedWindows, 5)
+    else openWindow(openedWindows, setOpenedWindows, 5, <Chess windowIndex={5}/>);
 }
 
 const openWindow = (openedWindows: Window[], setOpenedWindows: React.Dispatch<React.SetStateAction<Window[]>>, index: number, html: React.JSX.Element) => {
