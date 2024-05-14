@@ -9,6 +9,7 @@ export type Process = {
     arrivaltime: number;
     priority: number;
     memory: number;
+    isRunning: boolean;
 }
 
 export type SchedulerProviderProps = {

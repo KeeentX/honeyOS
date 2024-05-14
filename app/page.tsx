@@ -28,7 +28,7 @@ export default function Home() {
 
   useEffect(() => {
     router.push("/desktop");
-    setInterval(() => {
+    setTimeout(() => {
         setShowIntroDone(true);
     } , 15000);
   }, []);

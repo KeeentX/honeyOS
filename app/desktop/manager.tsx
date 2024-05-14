@@ -1,12 +1,13 @@
-import {useContext, useEffect, useState} from "react";
+import {useContext, useEffect, useState, useRef} from "react";
 import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
 import { Process, SchedulerContext } from "../context/schedulerContext";
 import { SchedulerProviderProps } from "../context/schedulerContext";
 
 export default function Manager (){
     const {openedWindows} = useContext(OpenedWindowsContext);
-    const {processes, setProcesses, fifo} = useContext(SchedulerContext);
-    const [schedulerSet, setSchedulerSet] = useState(false);
+    const {processes, setProcesses} = useContext(SchedulerContext);
+    const [schedulerSet, setSchedulerSet] = useState(false)
+    const processesRef = useRef<Process[]>(processes)
 
     useEffect(() => {
         setProcesses(() => {
@@ -15,10 +16,11 @@ export default function Manager (){
                 window.html && newProcesses.push({
                     name: window.name,
                     status: 0,
-                    bursttime: processes[index] && processes[index].bursttime ? processes[index].bursttime : Math.ceil((Math.random() * 10 % 3)),
+                    bursttime: processes[index] && processes[index].bursttime ? processes[index].bursttime : Math.ceil((Math.random() * 10 % 5)),
                     arrivaltime: 0,
                     priority: 0,
                     memory: processes[index] && processes[index].memory ? processes[index].memory: Math.ceil((Math.random() * 1000)),
+                    isRunning: false
                 })
             })
 
@@ -27,12 +29,41 @@ export default function Manager (){
         
     },[openedWindows])
 
-    useEffect(() =>{
-        if(!schedulerSet && processes.length) {
-            fifo();
-            setSchedulerSet(true); 
+    let timeout: NodeJS.Timeout;
+    let index = 0;
+
+    const fifo = (timer: number, processes: Process[]) => {
+        console.log('outside', index)
+        timeout = setTimeout(() => {
+            clearTimeout(timeout);
+            if(index == processes.length - 1) {
+                index = 0;
+            }
+            else index++;
+
+            setProcesses(prev => {
+                prev.map((process) => {
+                    process.isRunning = false;
+                });
+
+                prev[index].isRunning = true;
+
+                return [...prev];
+            })
+            fifo(processes[index].bursttime, processes);
+        }, timer * 50)
+    }
+
+    useEffect(() => {
+        if(processes.length == 0) return;
+        
+        fifo(0, processes)
+
+        return () => {
+            clearTimeout(timeout)
         }
-    }, [processes])
+    }, [openedWindows])
+
 
     return (
         <div className="font-consolas relative text-white ml-[5vw] mt-[5vh] w-[50vw]">
@@ -51,7 +82,7 @@ export default function Manager (){
                         <td>Status</td>
                     </tr>
                     {processes.map((process: Process, index: number) => {
-                    return <tr key={index}>
+                    return <tr key={index} className={`${process.isRunning && "bg-[#FF" + {index} + "FFF]"}`}>
                     <td>{process.priority}</td>
                     <td>{process.name}</td>
                     <td>{process.bursttime}</td>

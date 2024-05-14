@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="overflow-hidden">
       <body className={`${inter.className} bg-primary`}>
-      <SpeechRecognitionProvider>
+      {/* <SpeechRecognitionProvider> */}
       <OpenedWindowsProvider>
         <DirectoryProvider>
           <SchedulerProvider>
@@ -30,7 +30,7 @@ export default function RootLayout({
           </SchedulerProvider>
         </DirectoryProvider>
       </OpenedWindowsProvider>
-      </SpeechRecognitionProvider>
+      {/* </SpeechRecognitionProvider> */}
       </body>
     </html>
   );
