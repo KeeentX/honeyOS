@@ -10,9 +10,7 @@ import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
 
 export default function Desktop() {
     const {openedWindows, setOpenedWindows, numberOfOpenedWindows} = useContext(OpenedWindowsContext);
-    useEffect(() => {
-        console.log("Opened Windows: ", openedWindows)
-    }, [openedWindows]);
+
     return (
         <div>
             <div className="absolute w-full h-full -z-100">
