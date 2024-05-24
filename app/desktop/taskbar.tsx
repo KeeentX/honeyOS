@@ -29,10 +29,8 @@ export default function Taskbar() {
                 {currentTime}<br></br>
                 {currentDate}
             </div>
-            <div
-                className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300 
-                rounded-md ${openedWindows[0].html ? 'bg-gray-700 ' : ''}
-                `}
+            <div className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300 rounded-md 
+            ${openedWindows[0].html ? 'bg-gray-700 ' : ''}`}
                 onClick={() => OpenNote({
                     openedWindows,
                     setOpenedWindows,
