@@ -8,58 +8,59 @@ export default function Voice() {
     const [microphoneName, setMicrophoneName] = useState<string>('Unknown');
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    useEffect(() => {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-            const audioContext = new AudioContext();
-            audioContextRef.current = audioContext;
-            const analyser = audioContext.createAnalyser();
-            analyserRef.current = analyser;
-            const source = audioContext.createMediaStreamSource(stream);
-            source.connect(analyser);
-            dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
+    // useEffect(() => {
+    //     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+    //         const audioContext = new AudioContext();
+    //         audioContextRef.current = audioContext;
+    //         const analyser = audioContext.createAnalyser();
+    //         analyserRef.current = analyser;
+    //         const source = audioContext.createMediaStreamSource(stream);
+    //         source.connect(analyser);
+    //         dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
+    //
+    //         // MIRCOPHONE NAME
+    //         const audioInputDevices = stream.getAudioTracks().map((track) => track.label);
+    //         if (audioInputDevices.length > 0) {
+    //             setMicrophoneName(audioInputDevices[0]);
+    //         }
+    //
+    //         // SOUND WAVE
+    //         const canvas = canvasRef.current;
+    //         if (canvas) {
+    //             const canvasCtx = canvas.getContext('2d');
+    //             if (canvasCtx) {
+    //                 const draw = () => {
+    //                     if (analyser && dataArrayRef.current) {
+    //                         analyser.getByteTimeDomainData(dataArrayRef.current);
+    //                         canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+    //                         canvasCtx.fillStyle = 'rgb(0, 0, 0, 0)';
+    //                         canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+    //                         canvasCtx.lineWidth = 3;
+    //                         canvasCtx.strokeStyle = 'rgb(255, 255, 255)';
+    //                         canvasCtx.beginPath();
+    //                         const sliceWidth = canvas.width / analyser.frequencyBinCount;
+    //                         let x = 0;
+    //                         for (let i = 0; i < analyser.frequencyBinCount; i++) {
+    //                             const v = dataArrayRef.current[i] / 128.0;
+    //                             const y = v * canvas.height / 2;
+    //                             if (i === 0) {
+    //                                 canvasCtx.moveTo(x, y);
+    //                             } else {
+    //                                 canvasCtx.lineTo(x, y);
+    //                             }
+    //                             x += sliceWidth;
+    //                         }
+    //                         canvasCtx.lineTo(canvas.width, canvas.height / 2);
+    //                         canvasCtx.stroke();
+    //                     }
+    //                     requestAnimationFrame(draw);
+    //                 };
+    //                 draw();
+    //             }
+    //         }
+    //     });
+    // }, []);
 
-            // MIRCOPHONE NAME
-            const audioInputDevices = stream.getAudioTracks().map((track) => track.label);
-            if (audioInputDevices.length > 0) {
-                setMicrophoneName(audioInputDevices[0]);
-            }
-
-            // SOUND WAVE
-            const canvas = canvasRef.current;
-            if (canvas) {
-                const canvasCtx = canvas.getContext('2d');
-                if (canvasCtx) {
-                    const draw = () => {
-                        if (analyser && dataArrayRef.current) {
-                            analyser.getByteTimeDomainData(dataArrayRef.current);
-                            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-                            canvasCtx.fillStyle = 'rgb(0, 0, 0, 0)';
-                            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-                            canvasCtx.lineWidth = 3;
-                            canvasCtx.strokeStyle = 'rgb(255, 255, 255)';
-                            canvasCtx.beginPath();
-                            const sliceWidth = canvas.width / analyser.frequencyBinCount;
-                            let x = 0;
-                            for (let i = 0; i < analyser.frequencyBinCount; i++) {
-                                const v = dataArrayRef.current[i] / 128.0;
-                                const y = v * canvas.height / 2;
-                                if (i === 0) {
-                                    canvasCtx.moveTo(x, y);
-                                } else {
-                                    canvasCtx.lineTo(x, y);
-                                }
-                                x += sliceWidth;
-                            }
-                            canvasCtx.lineTo(canvas.width, canvas.height / 2);
-                            canvasCtx.stroke();
-                        }
-                        requestAnimationFrame(draw);
-                    };
-                    draw();
-                }
-            }
-        });
-    }, []);
     return (
         <div className={`font-consolas relative text-white ml-[5vw] mt-[10vh] w-[50vw]absolute w-[40vw] h-[25vh] 
         bg-black/40 blur-none backdrop-blur-sm top-0 -z-100`}>
