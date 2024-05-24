@@ -8,13 +8,12 @@ import {Window} from "@/app/context/openedWindowsContext";
 import Spotify from "@/app/program/spotify";
 import Chess from "@/app/program/chess";
 
-export function OpenNote(
-    {openedWindows, setOpenedWindows}: OpenedWindowsProps,
-    file?: {
-        name: string,
-        content: string,
-        location: string
-    }) {
+type File = {
+    name: string,
+    content: string,
+    location: string
+}
+export function OpenNote({openedWindows, setOpenedWindows}: OpenedWindowsProps, file?: File) {
     if(openedWindows[0].html) {
         if(openedWindows[0].html?.props.file.name === file?.name) toggleMinimize(openedWindows, setOpenedWindows, 0);
         else closeWindow(openedWindows, setOpenedWindows, 0);
