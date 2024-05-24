@@ -1,12 +1,12 @@
 'use client'
 
-import React, {useState, createContext, Provider} from "react";
+import React, {createContext, useState} from "react";
 
 export type Process = {
     name: String;
     status: 0 | 1 | 2;
-    bursttime: number;
-    arrivaltime: number;
+    burstTime: number;
+    arrivalTime: number;
     priority: number;
     memory: number;
 }
@@ -14,29 +14,39 @@ export type Process = {
 export type SchedulerProviderProps = {
     processes: Process[];
     setProcesses: React.Dispatch<React.SetStateAction<Process[]>>;
-    fifo: () => void
+    FIFO: (processes: Process[], processIndex: number, delay: number) => NodeJS.Timeout;
 }
 
 export const SchedulerContext = createContext<SchedulerProviderProps>({
     processes: [],
     setProcesses: () => {},
-    fifo: () => {},
+    FIFO: () => setTimeout(() => {}, 0)
 })
-
 
 export default function SchedulerProvider({children}:{children: React.ReactNode}) {
     const [processes, setProcesses] = useState<Process[]>([]);
-    const fifo = () : void => {
-        let currentIndex = 0;
-        setInterval(()=>{
-            setProcesses(() => {
-                processes[currentIndex].status = processes[currentIndex].status == 2 ? 1: processes[currentIndex].status == 1 ? 2 : 0;
-                currentIndex = currentIndex == processes.length - 1 ? 0: currentIndex + 1;
-                return processes
+    const [currentCPUProcessIndex, setCurrentCPUProcessIndex] = useState<number>(0);
+
+    const FIFO = (processes: Process[], processIndex: number, delay: number) => {
+        const timer = setTimeout(() => {
+            console.log(processes[processIndex], processIndex)
+            if(processIndex == processes.length - 1) processIndex = 0;
+            else processIndex += 1;
+            setCurrentCPUProcessIndex(processIndex);
+            setProcesses(prev => {
+                return prev.map((process, index) => {
+                    if(index === processIndex) process.status = 2;
+                    else process.status = 1;
+                    return process;
+                })
             })
-        }, 1000)
+            clearTimeout(timer);
+            FIFO(processes, processIndex, processes[processIndex].burstTime);
+        }, delay * 1000)
+
+        return timer;
     }
 
-    return <SchedulerContext.Provider value={{processes, setProcesses, fifo}}>{children}</SchedulerContext.Provider>
+    return <SchedulerContext.Provider value={{processes, setProcesses, FIFO}}>{children}</SchedulerContext.Provider>
 }
 
