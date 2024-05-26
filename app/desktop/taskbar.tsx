@@ -79,7 +79,7 @@ export default function Taskbar() {
             </div>
             <div
                 className={`p-3 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors duration-300
-                rounded-md ${openedWindows[4].html ? 'bg-gray-700 ' : ''}`}
+                rounded-md ${openedWindows[5].html ? 'bg-gray-700 ' : ''}`}
                 onClick={() => OpenChess({
                     openedWindows,
                     setOpenedWindows,

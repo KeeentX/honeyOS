@@ -4,6 +4,7 @@ import {SetFocus} from "@/app/desktop/programOpener";
 import useFont from "@/hooks/useFont";
 import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
 import {Process, SchedulerContext} from "@/app/context/schedulerContext";
+import {Simulate} from "react-dom/test-utils";
 
 export default function WindowScreen({name, children, icon, windowIndex, customName, onClose}: WindowProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
@@ -12,17 +13,26 @@ export default function WindowScreen({name, children, icon, windowIndex, customN
     const [position, setPosition] = useState({x: 0, y: window.innerHeight / 4});
     const [offset, setOffset] = useState({x: 0, y: 0});
     const {openedWindows, setOpenedWindows} = useContext(OpenedWindowsContext);
-    const {setProcesses, processes} = useContext(SchedulerContext)
+    const {
+        setReadyProcesses,
+        readyProcesses,
+        waitingRef,
+        waitProcesses,
+        setWaitProcesses,
+        arrivalTime
+    } = useContext(SchedulerContext)
     const [processIndex, setProcessIndex] = useState(0);
     const {montserrat} = useFont();
+
     useEffect(() => {
-        name && setProcesses((prev) => {
+        name && setReadyProcesses((prev) => {
             const newProcess: Process = {
                 name: name,
-                status: 0,
-                burstTime: Math.ceil((Math.random() * 10 % 3)),
-                arrivalTime: 0,
-                priority: 0,
+                status: 1,
+                burstTime: Math.ceil((Math.random() * 10 % 5)),
+                waitTime: 0,
+                arrivalTime: arrivalTime,
+                priority: Math.ceil((Math.random() * 100 % 10)),
                 memory: Math.ceil((Math.random() * 100000)),
             }
             setProcessIndex(prev.length);
@@ -44,11 +54,43 @@ export default function WindowScreen({name, children, icon, windowIndex, customN
 
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
-            setProcesses(prev => {
+            setReadyProcesses(prev => {
+                return prev.filter((_, index) => index !== processIndex);
+            })
+            setWaitProcesses(prev => {
                 return prev.filter((_, index) => index !== processIndex);
             })
         };
     }, [/* onClose */]);
+
+    useEffect(() => {
+        if(waitProcesses.length === 0) return;
+        const interval: NodeJS.Timeout = setTimeout(() => {
+            waitProcesses.forEach((process, index) => {
+                if(process.name === name) {
+                    setWaitProcesses(prev => {
+                        if(prev.length === 0) return [];
+                        if(prev[index] == undefined) return prev;
+                        if (prev[index].waitTime <= 0.1) {
+                            prev[index].waitTime = 0;
+                            prev[index].burstTime = Math.ceil((Math.random() * 10 % 5));
+                            prev[index].status = 1;
+                            prev[index].arrivalTime = arrivalTime;
+                            prev[index].priority = Math.ceil((Math.random() * 100 % 10));
+                            setReadyProcesses(prevReady => {
+                                return [...prevReady, prev[index]];
+                            });
+                            clearInterval(interval);
+                            return prev.filter((_, i) => i !== index);
+                        }
+                        prev[index].waitTime -= 0.1;
+                        return [...prev];
+                    })
+                }
+            })
+        }, 100);
+        return () => clearInterval(interval);
+    }, [waitProcesses]);
 
     const handleMouseDown = (event: React.MouseEvent) => {
         setIsDragging(true);
@@ -121,32 +163,32 @@ export default function WindowScreen({name, children, icon, windowIndex, customN
           <span className="pl-[1vw] flex flex-row space-x-3">
             {icon} {<p className={`text-md ${montserrat.className}`}>{customName ? customName : name}</p>}
           </span>
-                    <div className="flex space-x-2 items-center pr-[1vw] text-black">
-                        <button className="w-[3vh] h-[3vh] rounded-full bg-green-700 text-center p-2 text-gray-900"
-                                onClick={() => {
-                                    setOpenedWindows(prevState => {
-                                        prevState[windowIndex].minimized = true;
-                                        prevState[windowIndex].maximized = false;
-                                        prevState[windowIndex].focused = false;
-                                        return [...prevState];
-                                    });
-                                }}>
-                        </button>
-                        <button className="w-[3vh] h-[3vh] rounded-full bg-yellow-300 text-center p-2 text-gray-900"
-                                onClick={() => {
-                                    openedWindows[windowIndex].maximized ? setOpenedWindows(prevState => {
-                                        prevState[windowIndex].maximized = false;
-                                        return [...prevState];
-                                    }) : setOpenedWindows(prevState => {
-                                        prevState[windowIndex].maximized = true;
-                                        return [...prevState];
-                                    });
-                                }}>
-                        </button>
-                        <button className="w-[3vh] h-[3vh] rounded-full bg-red-800 text-center p-2 text-gray-900"
-                                onClick={closeThisWindow}>
-                        </button>
-                    </div>
+                <div className="flex space-x-2 items-center pr-[1vw] text-black">
+                    <button className="w-[3vh] h-[3vh] rounded-full bg-green-700 text-center p-2 text-gray-900"
+                            onClick={() => {
+                                setOpenedWindows(prevState => {
+                                    prevState[windowIndex].minimized = true;
+                                    prevState[windowIndex].maximized = false;
+                                    prevState[windowIndex].focused = false;
+                                    return [...prevState];
+                                });
+                            }}>
+                    </button>
+                    <button className="w-[3vh] h-[3vh] rounded-full bg-yellow-300 text-center p-2 text-gray-900"
+                            onClick={() => {
+                                openedWindows[windowIndex].maximized ? setOpenedWindows(prevState => {
+                                    prevState[windowIndex].maximized = false;
+                                    return [...prevState];
+                                }) : setOpenedWindows(prevState => {
+                                    prevState[windowIndex].maximized = true;
+                                    return [...prevState];
+                                });
+                            }}>
+                    </button>
+                    <button className="w-[3vh] h-[3vh] rounded-full bg-red-800 text-center p-2 text-gray-900"
+                            onClick={closeThisWindow}>
+                    </button>
+                </div>
                 </div>
             </div>
         </div>
