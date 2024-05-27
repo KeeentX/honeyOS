@@ -152,7 +152,7 @@ export default function Voice() {
             </div>
 
             <div>RAM:</div>
-            <div className="flex justify-center">
+            <div className="flex">
                 {memoryMap.map((processName, index) => (
                     <div
                         key={index}
@@ -167,7 +167,7 @@ export default function Voice() {
             </div>
 
             <div>DISK:</div>
-            <div className="flex justify-center">
+            <div className="flex">
                 {diskMap.map((processName, index) => (
                     <div
                         key={index}
