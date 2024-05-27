@@ -69,9 +69,12 @@ export default function SchedulerProvider({children}:{children: React.ReactNode}
             setArrivalTime(prev => prev + 0.1);
         }, 100);
 
-        setQuantum(Math.random() * 10 % 5);
-        quantumRef.current = quantum;
+        setQuantum(2);
     }, []);
+
+    useEffect(() => {
+        quantumRef.current = quantum;
+    }, [quantum]);
 
     useEffect(() => {
         if(readyProcesses.length === 0) currentCPUProcessIndex.current = 0;
@@ -83,6 +86,7 @@ export default function SchedulerProvider({children}:{children: React.ReactNode}
     }, [waitProcesses]);
 
     function FCFS() {
+        currentCPUProcessIndex.current = 0;
         if(schedulerMode !== 1 && readyRef.current.length == 0) return clearInterval(timer.current);
 
         timer.current = setInterval(() => {
@@ -191,9 +195,8 @@ export default function SchedulerProvider({children}:{children: React.ReactNode}
     }
 
     function ROUND_ROBIN() {
-        let quantumRemaining = 2;
+        let quantumRemaining = quantumRef.current;
         if(schedulerMode !== 4 && readyRef.current.length == 0) return clearInterval(timer.current);
-
         timer.current = setInterval(() => {
             setReadyProcesses(() => {
                 if(readyRef.current.length === 0) {
