@@ -21,7 +21,6 @@ export default function WindowScreen({name, children, icon, windowIndex, customN
         setWaitProcesses,
         arrivalTime
     } = useContext(SchedulerContext)
-    const [processIndex, setProcessIndex] = useState(0);
     const {montserrat} = useFont();
 
     useEffect(() => {
@@ -35,7 +34,6 @@ export default function WindowScreen({name, children, icon, windowIndex, customN
                 priority: Math.ceil((Math.random() * 100 % 10)),
                 memory: Math.ceil((Math.random() * 100000)),
             }
-            setProcessIndex(prev.length);
             return [...prev, newProcess];
         })
 
@@ -55,10 +53,10 @@ export default function WindowScreen({name, children, icon, windowIndex, customN
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
             setReadyProcesses(prev => {
-                return prev.filter((_, index) => index !== processIndex);
+                return prev.filter((_, index) => _.name !== name);
             })
             setWaitProcesses(prev => {
-                return prev.filter((_, index) => index !== processIndex);
+                return prev.filter((_, index) => _.name !== name);
             })
         };
     }, [/* onClose */]);
