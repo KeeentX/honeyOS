@@ -4,8 +4,10 @@ import {SetFocus} from "@/app/desktop/programOpener";
 import useFont from "@/hooks/useFont";
 import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
 import {Process, SchedulerContext} from "@/app/context/schedulerContext";
-import {Simulate} from "react-dom/test-utils";
 
+type IIDS = {
+    [key: string]: string;
+}
 export default function WindowScreen({name, children, icon, windowIndex, customName, onClose}: WindowProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -13,6 +15,14 @@ export default function WindowScreen({name, children, icon, windowIndex, customN
     const [position, setPosition] = useState({x: 0, y: window.innerHeight / 4});
     const [offset, setOffset] = useState({x: 0, y: 0});
     const {openedWindows, setOpenedWindows} = useContext(OpenedWindowsContext);
+    const IDS: IIDS = {
+        Note: 'JEM21',
+        Settings: 'KDC23',
+        Camera: 'DCP22',
+        File_Manager: 'DMM21',
+        Spotify: 'JAR21',
+        Chess: 'RR25',
+    };
     const {
         setReadyProcesses,
         readyProcesses,
@@ -26,6 +36,7 @@ export default function WindowScreen({name, children, icon, windowIndex, customN
     useEffect(() => {
         name && setReadyProcesses((prev) => {
             const newProcess: Process = {
+                process_id: IDS[name.replace(' ', '_')],
                 name: name,
                 status: 1,
                 burstTime: Math.ceil((Math.random() * 10 % 5)),

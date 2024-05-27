@@ -3,6 +3,7 @@
 import React, {createContext, useEffect, useRef, useState} from "react";
 
 export type Process = {
+    process_id: string;
     name: String;
     status: 0 | 1 | 2;
     burstTime: number;

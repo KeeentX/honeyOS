@@ -79,7 +79,7 @@ export default function Manager() {
                         {readyProcesses && readyProcesses.map((process: Process, index: number) => {
                             return (
                             <tr key={index} className={`${process.status === 2 && 'bg-green-500'}`}>
-                                <td className="px-2 py-1">77HYH</td>
+                                <td className="px-2 py-1">{process.process_id}</td>
                                 <td className="px-2 py-1">{process.priority}</td>
                                 <td className="px-2 py-1">{process.name}</td>
                                 <td className="px-2 py-1">{process.burstTime.toFixed(2)}s</td>
@@ -88,7 +88,7 @@ export default function Manager() {
                                 <td className="px-2 py-1">{process.status === 1 ? 'Ready' : 'Running'}</td>
                             </tr>
                         )
-})}
+                        })}
                     </tbody>
                 </table>
             </div>
@@ -109,7 +109,7 @@ export default function Manager() {
                                 <td className="px-2 py-1">{process.name}</td>
                                 <td className="px-2 py-1">I/O</td>
                                 <td className="px-2 py-1">{process.waitTime.toFixed(2)}s</td>
-                                <td className="px-2 py-1">{process.memory}kb</td>
+                                <td className="px-2 py-1">{(process.memory / 1000).toFixed(1)}MB</td>
                                 <td className="px-2 py-1">Waiting</td>
                             </tr>
                         ))}
