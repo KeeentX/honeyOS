@@ -32,7 +32,7 @@ export default function WindowScreen({name, children, icon, windowIndex, customN
                 waitTime: 0,
                 arrivalTime: arrivalTime,
                 priority: Math.ceil((Math.random() * 100 % 10)),
-                memory: Math.ceil((Math.random() * 100000)),
+                memory: Math.ceil((Math.random() * 200000)),
             }
             return [...prev, newProcess];
         })
