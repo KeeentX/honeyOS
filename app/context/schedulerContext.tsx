@@ -74,6 +74,7 @@ export default function SchedulerProvider({children}:{children: React.ReactNode}
     }, []);
 
     useEffect(() => {
+        if(readyProcesses.length === 0) currentCPUProcessIndex.current = 0;
         if(readyRef.current.length !== readyProcesses.length) readyRef.current = readyProcesses;
     }, [readyProcesses]);
 
@@ -82,19 +83,14 @@ export default function SchedulerProvider({children}:{children: React.ReactNode}
     }, [waitProcesses]);
 
     function FCFS() {
-        if(schedulerMode !== 1 && readyProcesses.length == 0) return clearInterval(timer.current);
-        setReadyProcesses(prev => {
-            return prev.map((process, index) => {
-                if(index === currentCPUProcessIndex.current && process.status == 1) process.status = 2;
-                return process;
-            })
-        })
+        if(schedulerMode !== 1 && readyRef.current.length == 0) return clearInterval(timer.current);
 
         timer.current = setInterval(() => {
             setReadyProcesses(prevReady => {
                 if(prevReady.length === 0) return [];
                 if(prevReady[currentCPUProcessIndex.current].burstTime <= 0.1) {
                     prevReady[currentCPUProcessIndex.current].burstTime = 0;
+                    prevReady[currentCPUProcessIndex.current].status = 0;
                     prevReady[currentCPUProcessIndex.current].waitTime = Math.ceil((Math.random() * 10 % 8));
                     setWaitProcesses(prevWait => {
                         return [...prevWait, prevReady[currentCPUProcessIndex.current]];
@@ -105,6 +101,7 @@ export default function SchedulerProvider({children}:{children: React.ReactNode}
                     return [...newPrevReady];
                 }
                 prevReady[currentCPUProcessIndex.current].burstTime -= 0.1;
+                prevReady[currentCPUProcessIndex.current].status = 2;
                 return [...prevReady];
             })
         }, 100);
@@ -112,14 +109,14 @@ export default function SchedulerProvider({children}:{children: React.ReactNode}
 
     function SJF() {
         let shortestJobIndex = currentCPUProcessIndex.current;
-
-        if(schedulerMode !== 2 && readyProcesses.length == 0) return clearInterval(timer.current);
+        if(schedulerMode !== 2 && readyRef.current.length == 0) return clearInterval(timer.current);
         timer.current = setInterval(() => {
             setReadyProcesses(prevReady => {
                 if(prevReady.length === 0) return [];
                 if(prevReady[shortestJobIndex] == null) return prevReady;
                 if(prevReady[shortestJobIndex].burstTime <= 0.1) {
                     prevReady[shortestJobIndex].burstTime = 0;
+                    prevReady[currentCPUProcessIndex.current].status = 0;
                     prevReady[shortestJobIndex].waitTime = Math.ceil((Math.random() * 10 % 8));
                     setWaitProcesses(prevWait => {
                         return [...prevWait, prevReady[shortestJobIndex]];
@@ -153,7 +150,7 @@ export default function SchedulerProvider({children}:{children: React.ReactNode}
 
     function PRIORITY() {
         let mostPriority = currentCPUProcessIndex.current;
-        if(schedulerMode !== 2 && readyProcesses.length == 0) return clearInterval(timer.current);
+        if(schedulerMode !== 3 && readyRef.current.length == 0) return clearInterval(timer.current);
 
         timer.current = setInterval(() => {
             setReadyProcesses(prevReady => {
@@ -161,6 +158,7 @@ export default function SchedulerProvider({children}:{children: React.ReactNode}
                 if(prevReady[mostPriority] == null) return prevReady;
                 if(prevReady[mostPriority].burstTime <= 0.1) {
                     prevReady[mostPriority].burstTime = 0;
+                    prevReady[currentCPUProcessIndex.current].status = 0;
                     prevReady[mostPriority].waitTime = Math.ceil((Math.random() * 10 % 8));
                     setWaitProcesses(prevWait => {
                         return [...prevWait, prevReady[mostPriority]];
@@ -194,50 +192,54 @@ export default function SchedulerProvider({children}:{children: React.ReactNode}
 
     function ROUND_ROBIN() {
         let quantumRemaining = 2;
-        if(schedulerMode !== 1 && readyProcesses.length == 0) return clearInterval(timer.current);
-
-        setReadyProcesses(prev => {
-            return prev.map((process, index) => {
-                if(index === currentCPUProcessIndex.current && process.status == 1) process.status = 2;
-                return process;
-            })
-        })
+        if(schedulerMode !== 4 && readyRef.current.length == 0) return clearInterval(timer.current);
 
         timer.current = setInterval(() => {
-            setReadyProcesses(prevReady => {
-                if(prevReady.length === 0) {
+            setReadyProcesses(() => {
+                if(readyRef.current.length === 0) {
                     currentCPUProcessIndex.current = 0;
                     return [];
                 }
-                if(prevReady[currentCPUProcessIndex.current] == null) return prevReady;
 
-                if(prevReady[currentCPUProcessIndex.current].burstTime <= 0.1) {
-                    prevReady[currentCPUProcessIndex.current].burstTime = 0;
-                    prevReady[currentCPUProcessIndex.current].waitTime = Math.ceil((Math.random() * 10 % 8));
+                if(readyRef.current[currentCPUProcessIndex.current] == null) currentCPUProcessIndex.current = 0;
+
+                if(readyRef.current[currentCPUProcessIndex.current].burstTime <= 0.1) {
+                    readyRef.current[currentCPUProcessIndex.current].burstTime = 0;
+                    readyRef.current[currentCPUProcessIndex.current].status = 0;
+                    readyRef.current[currentCPUProcessIndex.current].waitTime = Math.ceil((Math.random() * 10 % 8));
                     setWaitProcesses(prevWait => {
-                        return [...prevWait, prevReady[currentCPUProcessIndex.current]];
+                        return [...prevWait, readyRef.current[currentCPUProcessIndex.current]];
                     });
-                    const newPrevReady = prevReady.filter((_, index) => index !== currentCPUProcessIndex.current);
-                    clearInterval(timer.current)
-                    if(currentCPUProcessIndex.current === prevReady.length - 1) currentCPUProcessIndex.current = 0;
+                    const newPrevReady = readyRef.current.filter((_, index) => index !== currentCPUProcessIndex.current);
+                    clearInterval(timer.current);
                     ROUND_ROBIN();
                     return [...newPrevReady];
                 }
 
                 if(quantumRemaining <= 0.1) {
-                    console.log('Quantum Remaining:', quantumRemaining);
-                    currentCPUProcessIndex.current = (currentCPUProcessIndex.current + 1) % prevReady.length;
                     clearInterval(timer.current);
                     ROUND_ROBIN();
-                    return prevReady.map((process, index) => {
-                        if(index === currentCPUProcessIndex.current - 1) process.burstTime -= 0.1;
+                    const newProcesses = readyRef.current.map((process, index) => {
+                        if(index === currentCPUProcessIndex.current) process.burstTime -= 0.1;
                         process.status = 1;
                         return process;
                     })
+
+                    currentCPUProcessIndex.current = (currentCPUProcessIndex.current + 1) % readyRef.current.length;
+
+                    return [...newProcesses];
                 }
-                prevReady[currentCPUProcessIndex.current].burstTime -= 0.1;
+
+                setReadyProcesses(prev => {
+                    return prev.map((process, index) => {
+                        if(index === currentCPUProcessIndex.current && process.status == 1) process.status = 2;
+                        return process;
+                    })
+                })
+
+                readyRef.current[currentCPUProcessIndex.current].burstTime -= 0.1;
                 quantumRemaining -= 0.1;
-                return [...prevReady];
+                return [...readyRef.current];
             })
         }, 100);
     }
