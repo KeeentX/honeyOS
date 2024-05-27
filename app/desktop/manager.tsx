@@ -16,9 +16,16 @@ export default function Manager (){
         timer,
         setSchedulerMode,
         arrivalTime,
+        quantum
     } = useContext(SchedulerContext);
 
     useEffect(() => {
+        setReadyProcesses((prev) => {
+            prev.forEach((process) => {
+                process.status = 1;
+            })
+            return prev;
+        })
         if(schedulerMode === 1) FCFS();
         else if(schedulerMode === 2) SJF();
         else if(schedulerMode === 3) PRIORITY();
@@ -55,7 +62,7 @@ export default function Manager (){
                     <button
                         className={`${schedulerMode == 4 ? 'bg-yellow-300/50' : 'bg-indigo-400/50'} px-6 py-0.5 rounded-full`}
                         onClick={() => setSchedulerMode(4)}>
-                        ROUND ROBIN Q=2
+                        ROUND ROBIN Q={quantum.toFixed(1)}
                     </button>
                 </div>
                 <table className="table-auto">
