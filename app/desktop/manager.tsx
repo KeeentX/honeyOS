@@ -1,10 +1,10 @@
-import {useContext, useEffect, useState} from "react";
-import {OpenedWindowsContext} from "@/app/context/openedWindowsContext";
+import { useContext, useEffect, useState } from "react";
+import { OpenedWindowsContext } from "@/app/context/openedWindowsContext";
 import { Process, SchedulerContext } from "../context/schedulerContext";
 import { SchedulerProviderProps } from "../context/schedulerContext";
 import useFont from "@/hooks/useFont";
 
-export default function Manager (){
+export default function Manager() {
     const {
         readyProcesses, setReadyProcesses,
         waitProcesses,
@@ -23,97 +23,99 @@ export default function Manager (){
         setReadyProcesses((prev) => {
             prev.forEach((process) => {
                 process.status = 1;
-            })
+            });
             return prev;
-        })
-        if(schedulerMode === 1) FCFS();
-        else if(schedulerMode === 2) SJF();
-        else if(schedulerMode === 3) PRIORITY();
-        else if(schedulerMode === 4) ROUND_ROBIN();
+        });
+        if (schedulerMode === 1) FCFS();
+        else if (schedulerMode === 2) SJF();
+        else if (schedulerMode === 3) PRIORITY();
+        else if (schedulerMode === 4) ROUND_ROBIN();
 
         return () => clearInterval(timer.current);
 
-    }, [schedulerMode])
+    }, [schedulerMode]);
 
     return (
         <div className={`font-consolas relative text-white ml-[5vw] mt-[5vh] bg-black/40 blur-none backdrop-blur-sm w-[40vw] h-[50vh]`}>
-            <div className="blur-none p-[2vh] mr-[5vw] break-words ">
-                TASK MANAGER {arrivalTime.toFixed(2)} <br/>
-                <div className={'flex flex-row space-x-1'}>
-                    <button
-                        className={`${schedulerMode == 1 ? 'bg-yellow-300/50' : 'bg-indigo-400/50'} px-6 py-0.5 rounded-full`}
-                        onClick={() => {
-                            setSchedulerMode(1);
-                        }}>
-                        FCFS
-                    </button>
-                    <button
-                        className={`${schedulerMode == 2 ? 'bg-yellow-300/50' : 'bg-indigo-400/50'} px-6 py-0.5 rounded-full`}
-                        onClick={() => {
-                            setSchedulerMode(2);
-                        }}>
-                        SJF
-                    </button>
-                    <button
-                        className={`${schedulerMode == 3 ? 'bg-yellow-300/50' : 'bg-indigo-400/50'} px-6 py-0.5 rounded-full`}
-                        onClick={() => setSchedulerMode(3)}>
-                        PRIORITY
-                    </button>
-                    <button
-                        className={`${schedulerMode == 4 ? 'bg-yellow-300/50' : 'bg-indigo-400/50'} px-6 py-0.5 rounded-full`}
-                        onClick={() => setSchedulerMode(4)}>
-                        ROUND ROBIN Q={quantum.toFixed(1)}
-                    </button>
-                </div>
-                <table className="table-auto">
-                    <thead>
+            <div className="text-lg font-bold mb-4 p-[2vh]">
+                TASK MANAGER {arrivalTime.toFixed(2)}
+            </div>
+            <div className="flex flex-row space-x-3 mb-4 ml-4">
+                <button
+                    className={`${schedulerMode === 1 ? 'bg-yellow-300' : 'bg-indigo-400'} px-3 py-1 rounded-lg shadow-md`}
+                    onClick={() => setSchedulerMode(1)}>
+                    FCFS
+                </button>
+                <button
+                    className={`${schedulerMode === 2 ? 'bg-yellow-300' : 'bg-indigo-400'} px-3 py-1 rounded-lg shadow-md`}
+                    onClick={() => setSchedulerMode(2)}>
+                    SJF
+                </button>
+                <button
+                    className={`${schedulerMode === 3 ? 'bg-yellow-300' : 'bg-indigo-400'} px-3 py-1 rounded-lg shadow-md`}
+                    onClick={() => setSchedulerMode(3)}>
+                    PRIORITY
+                </button>
+                <button
+                    className={`${schedulerMode === 4 ? 'bg-yellow-300' : 'bg-indigo-400'} px-3 py-1 rounded-lg shadow-md`}
+                    onClick={() => setSchedulerMode(4)}>
+                    ROUND ROBIN Q={quantum.toFixed(1)}
+                </button>
+            </div>
+            <div className="overflow-auto max-h-[35vh] mb-4">
+                <table className="table-auto w-full text-xs">
+                    <thead className="bg-gray-700 text-white">
                         <tr>
-                            <td>Process ID</td>
-                            <td>Priority</td>
-                            <td>Process Name</td>
-                            <td>Burst Time</td>
-                            <td>Memory</td>
-                            <td>Arrival Time</td>
-                            <td>Status</td>
+                            <th className="px-2 py-1">ID</th>
+                            <th className="px-2 py-1">Priority</th>
+                            <th className="px-2 py-1">Name</th>
+                            <th className="px-2 py-1">Burst</th>
+                            <th className="px-2 py-1">Memory</th>
+                            <th className="px-2 py-1">Arrival</th>
+                            <th className="px-2 py-1">Status</th>
                         </tr>
                     </thead>
-                    {readyProcesses && readyProcesses.map((process: Process, index: number) => {
-                    return (
-                        <tr key={index} className={`${process.status === 2 && 'bg-green-500'}`}>
-                            <td>77HYH</td>
-                            <td>{process.priority}</td>
-                            <td>{process.name}</td>
-                            <td>{process.burstTime.toFixed(2)}s</td>
-                            <td>{process.memory / 1000}MB</td>
-                            <td>{process.arrivalTime.toFixed(2)}</td>
-                            <td>{process.status == 1 ? 'Ready' : 'Running'}</td>
-                        </tr>
-                    )
-                    })}
-                </table>
-                <table>
-                    <thead>
-                        <tr>
-                            <td>Name</td>
-                            <td>Wait Process</td>
-                            <td>Waiting Time</td>
-                            <td>Memory</td>
-                            <td>Status</td>
-                        </tr>
-                    </thead>
-                    {waitProcesses.map((process: Process, index: number) => {
-                        return (
-                            <tr key={index}>
-                                <td>{process.name}</td>
-                                <td>I/O</td>
-                                <td>{process.waitTime.toFixed(2)}s</td>
-                                <td>{process.memory}kb</td>
-                                <td>Waiting</td>
+                    <tbody className="bg-gray-800 text-gray-200">
+                        {readyProcesses && readyProcesses.map((process: Process, index: number) => {
+                            return (
+                            <tr key={index} className={`${process.status === 2 && 'bg-green-500'}`}>
+                                <td className="px-2 py-1">77HYH</td>
+                                <td className="px-2 py-1">{process.priority}</td>
+                                <td className="px-2 py-1">{process.name}</td>
+                                <td className="px-2 py-1">{process.burstTime.toFixed(2)}s</td>
+                                <td className="px-2 py-1">{(process.memory / 1000).toFixed(1)}MB</td>
+                                <td className="px-2 py-1">{process.arrivalTime.toFixed(2)}</td>
+                                <td className="px-2 py-1">{process.status === 1 ? 'Ready' : 'Running'}</td>
                             </tr>
-                    )
-                })}
+                        )
+})}
+                    </tbody>
+                </table>
+            </div>
+            <div className="overflow-auto max-h-[30vh]">
+                <table className="table-auto w-full text-xs">
+                    <thead className="bg-gray-700 text-white">
+                        <tr>
+                            <th className="px-2 py-1">Name</th>
+                            <th className="px-2 py-1">Wait Process</th>
+                            <th className="px-2 py-1">Waiting Time</th>
+                            <th className="px-2 py-1">Memory</th>
+                            <th className="px-2 py-1">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-gray-800 text-gray-200">
+                        {waitProcesses.map((process: Process, index: number) => (
+                            <tr key={index}>
+                                <td className="px-2 py-1">{process.name}</td>
+                                <td className="px-2 py-1">I/O</td>
+                                <td className="px-2 py-1">{process.waitTime.toFixed(2)}s</td>
+                                <td className="px-2 py-1">{process.memory}kb</td>
+                                <td className="px-2 py-1">Waiting</td>
+                            </tr>
+                        ))}
+                    </tbody>
                 </table>
             </div>
         </div>
-    )
+    );
 }
