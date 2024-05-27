@@ -5,7 +5,6 @@ import { SchedulerProviderProps } from "../context/schedulerContext";
 import useFont from "@/hooks/useFont";
 
 export default function Manager (){
-    const {openedWindows, numberOfOpenedWindows} = useContext(OpenedWindowsContext);
     const {
         readyProcesses, setReadyProcesses,
         waitProcesses,
@@ -17,14 +16,9 @@ export default function Manager (){
         timer,
         setSchedulerMode,
         arrivalTime,
-        quantum,
-        setQuantum,
     } = useContext(SchedulerContext);
 
     useEffect(() => {
-        if(readyProcesses.length === 0) return;
-
-        console.log('Scheduler Mode:', schedulerMode)
         if(schedulerMode === 1) FCFS();
         else if(schedulerMode === 2) SJF();
         else if(schedulerMode === 3) PRIORITY();
@@ -32,7 +26,7 @@ export default function Manager (){
 
         return () => clearInterval(timer.current);
 
-    }, [numberOfOpenedWindows, schedulerMode])
+    }, [schedulerMode])
 
     return (
         <div className={`font-consolas relative text-white ml-[5vw] mt-[5vh] bg-black/40 blur-none backdrop-blur-sm w-[40vw] h-[50vh]`}>
@@ -61,7 +55,7 @@ export default function Manager (){
                     <button
                         className={`${schedulerMode == 4 ? 'bg-yellow-300/50' : 'bg-indigo-400/50'} px-6 py-0.5 rounded-full`}
                         onClick={() => setSchedulerMode(4)}>
-                        ROUND ROBIN Q={quantum.toFixed(1)}
+                        ROUND ROBIN Q=2
                     </button>
                 </div>
                 <table className="table-auto">
