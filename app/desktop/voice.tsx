@@ -19,6 +19,7 @@ export default function Voice() {
     const [allProcesses, setAllProcesses] = useState<Process[]>([]);
     const [history, setHistory] = useState<String[]>([]);
     const [memoryMap, setMemoryMap] = useState<String[]>(new Array(20).fill(''));
+    const [diskMap, setDiskMap] = useState<String[]>([]);
 
     useEffect(() => {
         setAllProcesses([...readyProcesses, ...waitProcesses]);
@@ -56,8 +57,9 @@ export default function Voice() {
 
     // MEMORY MAP
     useEffect(() => {
-        // Create a copy of memoryMap
+        // Create a copy of memoryMap and diskMap
         let updatedMemoryMap = [...memoryMap];
+        let updatedDiskMap = [...diskMap];
 
         // Iterate through the memoryMap
         updatedMemoryMap.forEach((page: String, index: number) => {
@@ -65,6 +67,15 @@ export default function Voice() {
             if(page != '' && !allProcesses.some((process: Process) => process.name === page)){
                 // Set the page to empty
                 updatedMemoryMap[index] = '';
+            }
+        })
+
+        // Iterate through the diskMap
+        updatedDiskMap.forEach((processName: String) => {
+            // If the process is not in the allProcesses
+            if(!allProcesses.some((process: Process) => process.name === processName)){
+                // Remove the process from the diskMap
+                updatedDiskMap = updatedDiskMap.filter((name) => name !== processName);
             }
         })
 
@@ -90,7 +101,7 @@ export default function Voice() {
 
             // If the process is RUNNING and burstTime is greater than 0
             if (process.status === 2 && process.burstTime > 0) {
-                // Second pass: loading pages on pages with old processes
+                // Second pass: swap out the least recently used (LRU) process if needed
                 if(neededNumPages > 0){
                     // get the oldest process in the history
                     for(let i = 0; i < history.length; i++){
@@ -100,6 +111,7 @@ export default function Voice() {
                         for(let j = 0; j < 20; j++){
                             if(updatedMemoryMap[j] === oldProcessName){
                                 updatedMemoryMap[j] = process.name;
+                                updatedDiskMap.push(oldProcessName);
                                 neededNumPages--;
                             }
                             if(neededNumPages === 0) break;
@@ -107,12 +119,24 @@ export default function Voice() {
                         if(neededNumPages === 0) break;
                     }
                 }
+
+                // Remove the process from Disk
+                updatedDiskMap = updatedDiskMap.filter((processName) => processName !== process.name);
+            }else {
+                // count the number of pages already in the diskmap
+                let diskPages = updatedDiskMap.filter((processName) => processName === process.name).length;
+
+                // push the process to Disk neededNumPages - diskPages times
+                for(let i = 0; i < neededNumPages - diskPages; i++){
+                    updatedDiskMap.push(process.name);
+                }
+                
             }
         });
 
         // Update the memoryMap state with the new copy
         setMemoryMap(updatedMemoryMap);
-
+        setDiskMap(updatedDiskMap.filter(name => name !== ''));
     }, [allProcesses]);
 
     return (
@@ -124,14 +148,15 @@ export default function Voice() {
             </div>
 
             <div>
-                HISTORY: {history.join(' -> ')}
+                HISTORY: {history.join(' → ')}
             </div>
 
+            <div>RAM:</div>
             <div className="flex justify-center">
                 {memoryMap.map((processName, index) => (
                     <div
                         key={index}
-                        className="inline-block h-[10vh] w-[1.5vw] mr-[2px]"
+                        className="inline-block h-[3vh] w-[1.5vw] mr-[2px]"
                         style={{
                             backgroundColor: processName ? colorMap[processName.toString() as keyof typeof colorMap] : 'transparent',
                             border: '1px solid white'
@@ -141,6 +166,20 @@ export default function Voice() {
                 ))}
             </div>
 
+            <div>DISK:</div>
+            <div className="flex justify-center">
+                {diskMap.map((processName, index) => (
+                    <div
+                        key={index}
+                        className="inline-block h-[3vh] w-[1vw] mr-[2px]"
+                        style={{
+                            backgroundColor: colorMap[processName.toString() as keyof typeof colorMap],
+                            border: '1px solid white'
+                        }}
+                        title={processName.toString()}
+                    />
+                ))}
+            </div>
         </div>
     );
 }
